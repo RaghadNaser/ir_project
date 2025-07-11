@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IR Search Interface</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5em; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .header p { font-size: 1.2em; margin: 10px 0 0 0; opacity: 0.9; }
+        form { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 30px; }
+        .input-group { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .input-group label { min-width: 120px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 8px; }
+        .input-group input, .input-group select { flex: 1; padding: 12px 15px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 1em; transition: border-color 0.3s, box-shadow 0.3s; }
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: #0077cc; box-shadow: 0 0 0 3px rgba(0,119,204,0.1); }
+        .input-group input[type="submit"] { background: linear-gradient(135deg, #0077cc, #005fa3); color: white; border: none; padding: 15px 30px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .input-group input[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,119,204,0.3); }
+        .icon { color: #0077cc; }
+        .result-count { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; font-weight: 600; color: #333; border-left: 4px solid #0077cc; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        th { background: #0077cc; color: white; padding: 15px; text-align: left; font-weight: 600; }
+        td { padding: 12px 15px; border-bottom: 1px solid #e1e5e9; }
+        tr:hover { background: #f8f9fa; }
+        .doc-link { color: #0077cc; text-decoration: none; font-weight: 500; }
+        .doc-link:hover { text-decoration: underline; }
+        .footer { text-align: center; color: white; margin-top: 40px; opacity: 0.8; }
+        .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid #ccc; border-top: 3px solid #2d3e50; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-results-box { text-align: center; color: #2d3e50; font-size: 1.1em; margin: 30px 0 20px 0; }
+        .topic-detect-section { background: #f8f9fa; border: 1.5px solid #d1d8e0; border-radius: 8px; padding: 18px 20px 12px 20px; margin: 30px 0 20px 0; box-shadow: 0 2px 8px rgba(44,62,80,0.04); }
+        .topic-detect-section h3 { margin-top: 0; color: #2d3e50; font-size: 1.18em; }
+        .topic-detect-results { margin-top: 18px; background: #fff; border-radius: 7px; border: 1px solid #d1d8e0; padding: 14px 18px; max-width: 600px; }
+        .topic-detect-topic { margin-bottom: 10px; padding-bottom: 7px; border-bottom: 1px dashed #d1d8e0; }
+        .topic-detect-topic:last-child { border-bottom: none; }
+        .topic-detect-keywords { color: #0077cc; font-size: 0.98em; }
+        .topic-detect-prob { color: #27ae60; font-size: 0.97em; margin-left: 8px; }
+        .topic-detect-error { color: #c0392b; margin-top: 10px; }
+        .topic-detect-inline { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+        .topic-detect-switch-label { font-size: 0.97em; color: #2d3e50; }
+        @media (max-width: 768px) { .container { padding: 15px; } .header h1 { font-size: 2em; } form { padding: 20px; } .input-group { flex-direction: column; align-items: stretch; } .input-group label { min-width: auto; margin-bottom: 5px; } }
+        @media (max-width: 480px) { .header h1 { font-size: 1.8em; } form { padding: 15px; } .input-group input, .input-group select { padding: 10px 12px; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fa-solid fa-search"></i> Information Retrieval System</h1>
+        <p>Advanced Search with Multiple Representations</p>
+    </div>
+    <div class="container">
+        <form method="post" id="search-form" style="position:relative;">
+            <div class="input-group" style="position:relative; min-width:320px; flex:2 1 320px;">
+                <label for="query"><i class="fa-solid fa-keyboard icon"></i>Query</label>
+                <input type="text" id="query" name="query" value="{{ query|default('') }}" required autocomplete="off" style="flex:1;">
+            </div>
+            <div class="input-group">
+                <label for="dataset"><i class="fa-solid fa-database icon"></i>Dataset</label>
+                <select id="dataset" name="dataset">
+                    <option value="argsme" {% if dataset == 'argsme' %}selected{% endif %}>ARGSME</option>
+                    <option value="wikir" {% if dataset == 'wikir' %}selected{% endif %}>WIKIR</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="top_k"><i class="fa-solid fa-list-ol icon"></i>Top K</label>
+                <input type="number" id="top_k" name="top_k" min="1" max="100" value="{{ top_k|default(10) }}">
+            </div>
+            <div class="input-group">
+                <label for="representation"><i class="fa-solid fa-layer-group icon"></i>Representation</label>
+                <select id="representation" name="representation">
+                    <option value="embedding" {% if selected_representation == 'embedding' %}selected{% endif %}>Embedding</option>
+                    <option value="tfidf" {% if selected_representation == 'tfidf' %}selected{% endif %}>TF-IDF</option>
+                    <option value="hybrid" {% if selected_representation == 'hybrid' %}selected{% endif %}>Hybrid</option>
+                </select>
+            </div>
+            <div class="input-group" style="flex:0 0 180px; align-self: flex-end;">
+                <input type="submit" value="Search">
+            </div>
+        </form>
+        <div id="results-area">
+            {% if error %}
+                <div class="result-count" style="color:#c0392b;">{{ error }}</div>
+            {% endif %}
+            {% if results %}
+                <div class="result-count">
+                    <i class="fa-solid fa-list-ol"></i> Showing {{ results|length }} results
+                    {% if execution_time is defined and execution_time > 0 %}
+                        <span style="margin-left: 20px; color: #27ae60;">
+                            <i class="fa-solid fa-clock"></i> Execution time: {{ "%.3f"|format(execution_time) }}s
+                        </span>
+                    {% endif %}
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Doc ID</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in results %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            {% if r is mapping %}
+                                <td><a class="doc-link" href="/document/{{ dataset }}/{{ r['doc_id'] }}" target="_blank">{{ r['doc_id'] }}</a></td>
+                                <td>{{ "%.4f"|format(r["score"]) }}</td>
+                            {% else %}
+                                <td><a class="doc-link" href="/document/{{ dataset }}/{{ r[0] }}" target="_blank">{{ r[0] }}</a></td>
+                                <td>{{ "%.4f"|format(r[1]) }}</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% elif query is defined %}
+                <div class="result-count" style="color:#c0392b;">No results found.</div>
+            {% endif %}
+        </div>
+        <div id="keyword-extract-section" style="margin-top:30px;">
+            <h3><i class="fa-solid fa-lightbulb"></i> Extract Keywords (Topic Detection)</h3>
+            <textarea id="keyword-docs-input" rows="4" style="width:100%;max-width:600px;" placeholder="Paste your text here or leave empty to use top search results"></textarea>
+            <button id="extract-keywords-btn" style="margin-top:10px; padding:8px 18px; background:#1976d2; color:#fff; border:none; border-radius:6px; font-weight:600;">
+                Extract Keywords
+            </button>
+            <div id="keyword-extract-results" style="margin-top:18px;"></div>
+        </div>
+
+        <div id="topic-detection-section" style="margin-top:30px;">
+            <h3><i class="fa-solid fa-brain"></i> Topic Detection</h3>
+            <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+                <textarea id="topic-detect-input" rows="3" style="flex:1; min-width:300px; max-width:500px;" placeholder="Enter text to detect topics..."></textarea>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <select id="topic-detect-dataset" style="padding:8px 12px; border:1px solid #ddd; border-radius:4px;">
+                        <option value="argsme">ARGSME</option>
+                        <option value="wikir">WIKIR</option>
+                    </select>
+                    <button id="detect-topics-btn" style="padding:8px 18px; background:#27ae60; color:#fff; border:none; border-radius:6px; font-weight:600;">
+                        Detect Topics
+                    </button>
+                </div>
+            </div>
+            <div id="topic-detect-results" style="margin-top:18px;"></div>
+        </div>
+
+        <div id="topic-suggestion-section" style="margin-top:30px;">
+            <h3><i class="fa-solid fa-magic"></i> Topic Suggestions</h3>
+            <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+                <input type="text" id="topic-suggest-input" style="flex:1; min-width:300px; max-width:500px; padding:12px 15px; border:2px solid #e1e5e9; border-radius:8px;" placeholder="Enter query to get topic suggestions...">
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <select id="topic-suggest-dataset" style="padding:8px 12px; border:1px solid #ddd; border-radius:4px;">
+                        <option value="argsme">ARGSME</option>
+                        <option value="wikir">WIKIR</option>
+                    </select>
+                    <button id="suggest-topics-btn" style="padding:8px 18px; background:#e74c3c; color:#fff; border:none; border-radius:6px; font-weight:600;">
+                        Get Suggestions
+                    </button>
+                </div>
+            </div>
+            <div id="topic-suggest-results" style="margin-top:18px;"></div>
+        </div>
+
+        <!-- New Section: Separated Service Architecture Testing -->
+        <div id="service-architecture-section" style="margin-top:40px; background:#f8f9fa; border:2px solid #e1e5e9; border-radius:12px; padding:25px;">
+            <h3 style="margin-top:0; color:#2d3e50; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-network-wired" style="color:#7b68ee;"></i> 
+                Service Architecture Testing
+            </h3>
+            <p style="color:#666; margin-bottom:25px;">Test the new separated service architecture with vector store and traditional search options.</p>
+            
+            <!-- Unified Search Testing -->
+            <div style="background:#fff; border-radius:8px; padding:20px; margin-bottom:20px; border:1px solid #e1e5e9;">
+                <h4 style="margin-top:0; color:#2d3e50; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-search" style="color:#0077cc;"></i>
+                    Unified Search Comparison
+                </h4>
+                <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+                    <input type="text" id="unified-search-input" style="flex:1; min-width:300px; padding:12px 15px; border:2px solid #e1e5e9; border-radius:8px;" placeholder="Enter search query...">
+                    <select id="unified-search-dataset" style="padding:10px 12px; border:1px solid #ddd; border-radius:4px;">
+                        <option value="argsme">ARGSME</option>
+                        <option value="wikir">WIKIR</option>
+                    </select>
+                    <input type="number" id="unified-search-topk" value="5" min="1" max="20" style="width:70px; padding:10px 12px; border:1px solid #ddd; border-radius:4px;">
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button id="search-vector-store-btn" style="padding:10px 20px; background:#27ae60; color:#fff; border:none; border-radius:6px; font-weight:600;">
+                        🚀 Vector Store Search
+                    </button>
+                    <button id="search-traditional-btn" style="padding:10px 20px; background:#e67e22; color:#fff; border:none; border-radius:6px; font-weight:600;">
+                        🔍 Traditional Search
+                    </button>
+                    <button id="compare-both-btn" style="padding:10px 20px; background:#9b59b6; color:#fff; border:none; border-radius:6px; font-weight:600;">
+                        ⚡ Compare Both
+                    </button>
+                </div>
+                <div id="unified-search-results" style="margin-top:18px;"></div>
+            </div>
+
+            <!-- Embedding Generation Testing -->
+            <div style="background:#fff; border-radius:8px; padding:20px; margin-bottom:20px; border:1px solid #e1e5e9;">
+                <h4 style="margin-top:0; color:#2d3e50; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-brain" style="color:#ff6b6b;"></i>
+                    Embedding Generation
+                </h4>
+                <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+                    <input type="text" id="embedding-input" style="flex:1; min-width:300px; padding:12px 15px; border:2px solid #e1e5e9; border-radius:8px;" placeholder="Enter text to generate embedding...">
+                    <select id="embedding-dataset" style="padding:10px 12px; border:1px solid #ddd; border-radius:4px;">
+                        <option value="argsme">ARGSME</option>
+                        <option value="wikir">WIKIR</option>
+                    </select>
+                    <button id="generate-embedding-btn" style="padding:10px 20px; background:#ff6b6b; color:#fff; border:none; border-radius:6px; font-weight:600;">
+                        Generate Embedding
+                    </button>
+                </div>
+                <div id="embedding-results" style="margin-top:18px;"></div>
+            </div>
+
+            <!-- Service Health Check -->
+            <div style="background:#fff; border-radius:8px; padding:20px; border:1px solid #e1e5e9;">
+                <h4 style="margin-top:0; color:#2d3e50; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-heartbeat" style="color:#2ecc71;"></i>
+                    Service Health Status
+                </h4>
+                <button id="check-services-btn" style="padding:10px 20px; background:#2ecc71; color:#fff; border:none; border-radius:6px; font-weight:600; margin-bottom:15px;">
+                    Check All Services
+                </button>
+                <div id="service-health-results" style="margin-top:10px;"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <i class="fa-solid fa-leaf"></i> IR Project &copy; {{ 2024 }}
+        </div>
+    </div>
+    <script>
+    document.getElementById('extract-keywords-btn').onclick = async function() {
+        let docs = document.getElementById('keyword-docs-input').value.trim();
+        // If textarea is empty, use top search results from the page
+        if (!docs) {
+            docs = [];
+            document.querySelectorAll('#results-area table tbody tr').forEach(tr => {
+                let tds = tr.querySelectorAll('td');
+                if (tds.length > 2) docs.push(tds[2].innerText);
+            });
+        } else {
+            docs = [docs];
+        }
+        if (docs.length === 0) {
+            document.getElementById('keyword-extract-results').innerHTML = '<span style="color:#c0392b;">No text provided.</span>';
+            return;
+        }
+        document.getElementById('keyword-extract-results').innerHTML = '<span class="loading-spinner"></span> Extracting...';
+        try {
+            const resp = await fetch('http://localhost:8006/extract_keywords', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ documents: docs, top_k: 10 })
+            });
+            const data = await resp.json();
+            if (data.keywords && data.keywords.length > 0) {
+                document.getElementById('keyword-extract-results').innerHTML =
+                    '<ul style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:10px;">' +
+                    data.keywords.map(kw => `<li style="background:#e3f2fd; color:#1976d2; border-radius:6px; padding:6px 14px; font-weight:600; font-size:1em;">${kw}</li>`).join('') +
+                    '</ul>';
+            } else {
+                document.getElementById('keyword-extract-results').innerHTML = '<span style="color:#c0392b;">No keywords found.</span>';
+            }
+        } catch (e) {
+            document.getElementById('keyword-extract-results').innerHTML = '<span style="color:#c0392b;">Error extracting keywords.</span>';
+        }
+    };
+
+    // Topic Detection functionality
+    document.getElementById('detect-topics-btn').onclick = async function() {
+        const text = document.getElementById('topic-detect-input').value.trim();
+        const dataset = document.getElementById('topic-detect-dataset').value;
+        
+        if (!text) {
+            document.getElementById('topic-detect-results').innerHTML = '<span style="color:#c0392b;">Please enter text to detect topics.</span>';
+            return;
+        }
+        
+        document.getElementById('topic-detect-results').innerHTML = '<span class="loading-spinner"></span> Detecting topics...';
+        
+        try {
+            const resp = await fetch('http://localhost:8006/detect-topics', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    query: text, 
+                    dataset: dataset,
+                    top_k: 5 
+                })
+            });
+            const data = await resp.json();
+            
+            if (data.detected_topics && data.detected_topics.length > 0) {
+                let resultsHtml = '<div style="background:#f8f9fa; border-radius:8px; padding:15px; border:1px solid #e1e5e9;">';
+                resultsHtml += '<h4 style="margin-top:0; color:#2d3e50;">🎯 Detected Topics:</h4>';
+                
+                data.detected_topics.forEach((topic, index) => {
+                    resultsHtml += `<div style="margin-bottom:10px; padding:10px; background:#fff; border-radius:6px; border-left:4px solid #27ae60;">`;
+                    resultsHtml += `<strong>Topic ${index + 1}:</strong> ${topic.keywords.join(', ')}<br>`;
+                    resultsHtml += `<span style="color:#27ae60; font-size:0.9em;">Confidence: ${(topic.probability * 100).toFixed(1)}%</span>`;
+                    resultsHtml += `</div>`;
+                });
+                
+                if (data.similar_topics && data.similar_topics.length > 0) {
+                    resultsHtml += '<h4 style="color:#2d3e50;">🔗 Similar Topics:</h4>';
+                    resultsHtml += '<div style="display:flex; flex-wrap:wrap; gap:8px;">';
+                    data.similar_topics.forEach(topic => {
+                        resultsHtml += `<span style="background:#e3f2fd; color:#1976d2; padding:4px 8px; border-radius:4px; font-size:0.9em;">${topic}</span>`;
+                    });
+                    resultsHtml += '</div>';
+                }
+                
+                resultsHtml += '</div>';
+                document.getElementById('topic-detect-results').innerHTML = resultsHtml;
+            } else {
+                document.getElementById('topic-detect-results').innerHTML = '<span style="color:#c0392b;">No topics detected.</span>';
+            }
+        } catch (e) {
+            document.getElementById('topic-detect-results').innerHTML = '<span style="color:#c0392b;">Error detecting topics. Make sure the topic detection service is running.</span>';
+        }
+    };
+
+    // Topic Suggestion functionality
+    document.getElementById('suggest-topics-btn').onclick = async function() {
+        const query = document.getElementById('topic-suggest-input').value.trim();
+        const dataset = document.getElementById('topic-suggest-dataset').value;
+        
+        if (!query) {
+            document.getElementById('topic-suggest-results').innerHTML = '<span style="color:#c0392b;">Please enter a query to get topic suggestions.</span>';
+            return;
+        }
+        
+        document.getElementById('topic-suggest-results').innerHTML = '<span class="loading-spinner"></span> Getting suggestions...';
+        
+        try {
+            const resp = await fetch('http://localhost:8006/suggest-topics', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    query: query, 
+                    dataset: dataset,
+                    top_k: 8 
+                })
+            });
+            const data = await resp.json();
+            
+            if (data.suggested_topics && data.suggested_topics.length > 0) {
+                let resultsHtml = '<div style="background:#f8f9fa; border-radius:8px; padding:15px; border:1px solid #e1e5e9;">';
+                resultsHtml += '<h4 style="margin-top:0; color:#2d3e50;">💡 Topic Suggestions:</h4>';
+                resultsHtml += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">';
+                
+                data.suggested_topics.forEach(topic => {
+                    resultsHtml += `<div style="background:#fff; padding:10px; border-radius:6px; border-left:4px solid #e74c3c;">`;
+                    resultsHtml += `<strong>${topic.keywords.join(', ')}</strong><br>`;
+                    resultsHtml += `<span style="color:#e74c3c; font-size:0.9em;">Relevance: ${(topic.score * 100).toFixed(1)}%</span>`;
+                    resultsHtml += `</div>`;
+                });
+                
+                resultsHtml += '</div>';
+                
+                if (data.similar_topics && data.similar_topics.length > 0) {
+                    resultsHtml += '<h4 style="color:#2d3e50; margin-top:15px;">🔗 Related Topics:</h4>';
+                    resultsHtml += '<div style="display:flex; flex-wrap:wrap; gap:8px;">';
+                    data.similar_topics.forEach(topic => {
+                        resultsHtml += `<span style="background:#fff3cd; color:#856404; padding:4px 8px; border-radius:4px; font-size:0.9em;">${topic}</span>`;
+                    });
+                    resultsHtml += '</div>';
+                }
+                
+                resultsHtml += '</div>';
+                document.getElementById('topic-suggest-results').innerHTML = resultsHtml;
+            } else {
+                document.getElementById('topic-suggest-results').innerHTML = '<span style="color:#c0392b;">No topic suggestions found.</span>';
+            }
+        } catch (e) {
+            document.getElementById('topic-suggest-results').innerHTML = '<span style="color:#c0392b;">Error getting topic suggestions. Make sure the topic detection service is running.</span>';
+        }
+    };
+
+    // New JavaScript for Separated Service Architecture
+
+    // Unified Search Functions
+    document.getElementById('search-vector-store-btn').onclick = async function() {
+        const query = document.getElementById('unified-search-input').value.trim();
+        const dataset = document.getElementById('unified-search-dataset').value;
+        const topK = document.getElementById('unified-search-topk').value;
+        
+        if (!query) {
+            document.getElementById('unified-search-results').innerHTML = '<span style="color:#c0392b;">Please enter a search query.</span>';
+            return;
+        }
+        
+        await performUnifiedSearch(query, dataset, topK, true, 'Vector Store');
+    };
+
+    document.getElementById('search-traditional-btn').onclick = async function() {
+        const query = document.getElementById('unified-search-input').value.trim();
+        const dataset = document.getElementById('unified-search-dataset').value;
+        const topK = document.getElementById('unified-search-topk').value;
+        
+        if (!query) {
+            document.getElementById('unified-search-results').innerHTML = '<span style="color:#c0392b;">Please enter a search query.</span>';
+            return;
+        }
+        
+        await performUnifiedSearch(query, dataset, topK, false, 'Traditional');
+    };
+
+    document.getElementById('compare-both-btn').onclick = async function() {
+        const query = document.getElementById('unified-search-input').value.trim();
+        const dataset = document.getElementById('unified-search-dataset').value;
+        const topK = document.getElementById('unified-search-topk').value;
+        
+        if (!query) {
+            document.getElementById('unified-search-results').innerHTML = '<span style="color:#c0392b;">Please enter a search query.</span>';
+            return;
+        }
+        
+        document.getElementById('unified-search-results').innerHTML = '<span class="loading-spinner"></span> Comparing both methods...';
+        
+        try {
+            const resp = await fetch(`http://localhost:8006/compare/${dataset}?query=${encodeURIComponent(query)}&top_k=${topK}`);
+            const data = await resp.json();
+            
+            let resultsHtml = '<div style="background:#f8f9fa; border-radius:8px; padding:15px;">';
+            resultsHtml += '<h4 style="margin-top:0;">⚡ Performance Comparison</h4>';
+            
+            if (data.comparison.vector_store && data.comparison.traditional) {
+                resultsHtml += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">';
+                
+                // Vector Store Results
+                resultsHtml += '<div style="background:#e8f5e8; padding:15px; border-radius:6px; border-left:4px solid #27ae60;">';
+                resultsHtml += '<h5 style="margin-top:0; color:#27ae60;">🚀 Vector Store Pipeline</h5>';
+                resultsHtml += `<p><strong>Time:</strong> ${(data.comparison.vector_store.time * 1000).toFixed(1)}ms</p>`;
+                resultsHtml += `<p><strong>Results:</strong> ${data.comparison.vector_store.results_count}</p>`;
+                resultsHtml += '</div>';
+                
+                // Traditional Results
+                resultsHtml += '<div style="background:#fff3cd; padding:15px; border-radius:6px; border-left:4px solid #e67e22;">';
+                resultsHtml += '<h5 style="margin-top:0; color:#e67e22;">🔍 Traditional Search</h5>';
+                resultsHtml += `<p><strong>Time:</strong> ${(data.comparison.traditional.time * 1000).toFixed(1)}ms</p>`;
+                resultsHtml += `<p><strong>Results:</strong> ${data.comparison.traditional.results_count}</p>`;
+                resultsHtml += '</div>';
+                
+                resultsHtml += '</div>';
+                
+                // Speed comparison
+                const speedup = data.comparison.traditional.time / data.comparison.vector_store.time;
+                resultsHtml += `<div style="text-align:center; padding:10px; background:#e3f2fd; border-radius:6px;">`;
+                resultsHtml += `<strong>Vector Store is ${speedup.toFixed(1)}x faster!</strong>`;
+                resultsHtml += `</div>`;
+            } else {
+                resultsHtml += '<p style="color:#c0392b;">Error comparing methods. Check service status.</p>';
+            }
+            
+            resultsHtml += '</div>';
+            document.getElementById('unified-search-results').innerHTML = resultsHtml;
+            
+        } catch (e) {
+            document.getElementById('unified-search-results').innerHTML = '<span style="color:#c0392b;">Error comparing search methods.</span>';
+        }
+    };
+
+    async function performUnifiedSearch(query, dataset, topK, useVectorStore, methodName) {
+        document.getElementById('unified-search-results').innerHTML = `<span class="loading-spinner"></span> Searching with ${methodName}...`;
+        
+        try {
+            const resp = await fetch('http://localhost:8006/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    query: query,
+                    dataset: dataset,
+                    top_k: parseInt(topK),
+                    use_vector_store: useVectorStore
+                })
+            });
+            const data = await resp.json();
+            
+            let resultsHtml = '<div style="background:#f8f9fa; border-radius:8px; padding:15px;">';
+            resultsHtml += `<h4 style="margin-top:0;">${methodName} Results</h4>`;
+            resultsHtml += `<p><strong>Time:</strong> ${(data.total_time * 1000).toFixed(1)}ms | <strong>Method:</strong> ${data.method_used} | <strong>Results:</strong> ${data.total_results}</p>`;
+            
+            if (data.results && data.results.length > 0) {
+                resultsHtml += '<table style="width:100%; margin-top:10px; border-collapse:collapse;">';
+                resultsHtml += '<thead><tr style="background:#ddd;"><th style="padding:8px; text-align:left;">#</th><th style="padding:8px; text-align:left;">Document ID</th><th style="padding:8px; text-align:left;">Score</th></tr></thead>';
+                resultsHtml += '<tbody>';
+                
+                data.results.slice(0, parseInt(topK)).forEach((result, index) => {
+                    resultsHtml += `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px;">${index + 1}</td><td style="padding:8px;">${result[0]}</td><td style="padding:8px;">${result[1].toFixed(4)}</td></tr>`;
+                });
+                
+                resultsHtml += '</tbody></table>';
+            } else {
+                resultsHtml += '<p style="color:#c0392b;">No results found.</p>';
+            }
+            
+            resultsHtml += '</div>';
+            document.getElementById('unified-search-results').innerHTML = resultsHtml;
+            
+        } catch (e) {
+            document.getElementById('unified-search-results').innerHTML = `<span style="color:#c0392b;">Error with ${methodName} search.</span>`;
+        }
+    }
+
+    // Embedding Generation Function
+    document.getElementById('generate-embedding-btn').onclick = async function() {
+        const text = document.getElementById('embedding-input').value.trim();
+        const dataset = document.getElementById('embedding-dataset').value;
+        
+        if (!text) {
+            document.getElementById('embedding-results').innerHTML = '<span style="color:#c0392b;">Please enter text to generate embedding.</span>';
+            return;
+        }
+        
+        document.getElementById('embedding-results').innerHTML = '<span class="loading-spinner"></span> Generating embedding...';
+        
+        try {
+            const resp = await fetch('http://localhost:8004/embed', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: text,
+                    dataset: dataset
+                })
+            });
+            const data = await resp.json();
+            
+            let resultsHtml = '<div style="background:#f0f8ff; border-radius:8px; padding:15px; border:1px solid #b6d7ff;">';
+            resultsHtml += '<h4 style="margin-top:0; color:#0066cc;">🧠 Generated Embedding</h4>';
+            resultsHtml += `<p><strong>Text:</strong> "${data.text}"</p>`;
+            resultsHtml += `<p><strong>Dimension:</strong> ${data.dimension}</p>`;
+            resultsHtml += `<p><strong>Processing Time:</strong> ${(data.processing_time * 1000).toFixed(1)}ms</p>`;
+            resultsHtml += `<p><strong>First 10 values:</strong> [${data.embedding.slice(0, 10).map(v => v.toFixed(4)).join(', ')}...]</p>`;
+            resultsHtml += '</div>';
+            
+            document.getElementById('embedding-results').innerHTML = resultsHtml;
+            
+        } catch (e) {
+            document.getElementById('embedding-results').innerHTML = '<span style="color:#c0392b;">Error generating embedding. Check if embedding service is running.</span>';
+        }
+    };
+
+    // Service Health Check Function
+    document.getElementById('check-services-btn').onclick = async function() {
+        document.getElementById('service-health-results').innerHTML = '<span class="loading-spinner"></span> Checking services...';
+        
+        const services = [
+            { name: 'Embedding Service', url: 'http://localhost:8004/health', port: 8004 },
+            { name: 'Vector Store Service', url: 'http://localhost:8007/health', port: 8007 },
+            { name: 'Unified Search Service', url: 'http://localhost:8006/health', port: 8006 }
+        ];
+        
+        let resultsHtml = '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px;">';
+        
+        for (const service of services) {
+            try {
+                const resp = await fetch(service.url);
+                const data = await resp.json();
+                
+                resultsHtml += `<div style="background:#e8f5e8; border:1px solid #27ae60; border-radius:6px; padding:15px;">`;
+                resultsHtml += `<h5 style="margin-top:0; color:#27ae60;">✅ ${service.name}</h5>`;
+                resultsHtml += `<p><strong>Port:</strong> ${service.port}</p>`;
+                resultsHtml += `<p><strong>Status:</strong> ${data.status || 'Healthy'}</p>`;
+                
+                if (data.indices_loaded) {
+                    resultsHtml += `<p><strong>Indices:</strong> ${Object.keys(data.indices_loaded).length} datasets</p>`;
+                }
+                if (data.loaded_models !== undefined) {
+                    resultsHtml += `<p><strong>Models:</strong> ${Array.isArray(data.loaded_models) ? data.loaded_models.length : Object.keys(data.loaded_models).length}</p>`;
+                }
+                
+                resultsHtml += `</div>`;
+                
+            } catch (e) {
+                resultsHtml += `<div style="background:#ffeaa7; border:1px solid:#e17055; border-radius:6px; padding:15px;">`;
+                resultsHtml += `<h5 style="margin-top:0; color:#e17055;">❌ ${service.name}</h5>`;
+                resultsHtml += `<p><strong>Port:</strong> ${service.port}</p>`;
+                resultsHtml += `<p><strong>Status:</strong> Not responding</p>`;
+                resultsHtml += `</div>`;
+            }
+        }
+        
+        resultsHtml += '</div>';
+        document.getElementById('service-health-results').innerHTML = resultsHtml;
+    };
+    </script>
+</body>
+</html>
