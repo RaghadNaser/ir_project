@@ -1,6 +1,7 @@
 # services/api_gateway/main.py
 
 from fastapi import FastAPI, Request, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -17,6 +18,15 @@ app = FastAPI(
     title="API Gateway with Web UI",
     description="Main API Gateway for Information Retrieval System",
     version="1.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Setup paths for templates and static
@@ -145,7 +155,7 @@ async def health_check():
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
-    """Home page"""
+    """Home page with optional services"""
     return templates.TemplateResponse("index.html", {
         "request": request,
         "datasets": DATASETS,
@@ -263,7 +273,15 @@ def search_form(
     first_stage_k: int = Form(2000),
     tfidf_weight: float = Form(0.4),
     embedding_weight: float = Form(0.6),
-    enable_topic_detection: str = Form(None)
+    enable_topic_detection: str = Form(None),
+    topic_max_topics: str = Form(None),
+    topic_min_score: str = Form(None),
+    enable_query_suggestion: str = Form(None),
+    suggestion_method: str = Form(None),
+    suggestion_count: str = Form(None),
+    enable_vector_store: str = Form(None),
+    vector_index_type: str = Form(None),
+    vector_performance: str = Form(None)
 ):
     """Handle form-based search"""
     save_user_query(query, dataset)
@@ -305,6 +323,57 @@ def search_form(
     except Exception as e:
         error = f"Search error: {str(e)}"
     
+    # Handle optional services
+    topics = None
+    suggestions = None
+    vector_results = None
+    
+    if enable_topic_detection:
+        try:
+            topic_data = {
+                "query": query,
+                "dataset": dataset,
+                "max_topics": int(topic_max_topics) if topic_max_topics else 5,
+                "min_relevance_score": float(topic_min_score) if topic_min_score else 0.1
+            }
+            topic_response = requests.post(f"http://localhost:8006/detect-topics", json=topic_data, timeout=10)
+            if topic_response.status_code == 200:
+                topic_result = topic_response.json()
+                topics = topic_result.get("detected_topics", [])
+        except Exception as e:
+            print(f"Topic detection error: {e}")
+    
+    if enable_query_suggestion:
+        try:
+            suggestion_data = {
+                "query": query,
+                "dataset": dataset,
+                "method": suggestion_method or "hybrid",
+                "top_k": int(suggestion_count) if suggestion_count else 8
+            }
+            suggestion_response = requests.post(f"http://localhost:8010/suggest", json=suggestion_data, timeout=10)
+            if suggestion_response.status_code == 200:
+                suggestion_result = suggestion_response.json()
+                suggestions = suggestion_result.get("suggestions", [])
+        except Exception as e:
+            print(f"Query suggestion error: {e}")
+    
+    if enable_vector_store:
+        try:
+            vector_data = {
+                "query": query,
+                "dataset": dataset,
+                "top_k": int(top_k),
+                "index_type": vector_index_type or "auto",
+                "performance": vector_performance or "balanced"
+            }
+            vector_response = requests.post(f"http://localhost:8008/search", json=vector_data, timeout=10)
+            if vector_response.status_code == 200:
+                vector_result = vector_response.json()
+                vector_results = vector_result.get("results", [])
+        except Exception as e:
+            print(f"Vector store error: {e}")
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "datasets": DATASETS,
@@ -315,16 +384,39 @@ def search_form(
         "query": query,
         "dataset": dataset,
         "representation": representation,
+        "method": method,
+        "top_k": top_k,
         "execution_time": execution_time,
         "performance_stats": performance_stats,
         "search_keywords": search_keywords,
-        "total_results": len(results)
+        "total_results": len(results),
+        "topics": topics,
+        "suggestions": suggestions,
+        "vector_results": vector_results
     })
 
 @app.get("/suggestions")
-async def get_query_suggestions(query: str, dataset: str = "argsme", num_suggestions: int = 5):
+async def get_query_suggestions(dataset: str = "argsme", num_suggestions: int = 5, query: str = ""):
     """Get query suggestions"""
     try:
+        # If no query provided, get popular suggestions
+        if not query:
+            # Return some default suggestions based on dataset
+            default_suggestions = {
+                "argsme": [
+                    "climate change", "vaccination", "gun control", "abortion", 
+                    "immigration", "education", "healthcare", "economy"
+                ],
+                "wikir": [
+                    "artificial intelligence", "machine learning", "data science", 
+                    "programming", "technology", "computer science", "algorithms", "software"
+                ]
+            }
+            
+            suggestions = default_suggestions.get(dataset, ["data", "information", "search", "query"])
+            return {"suggestions": [{"query": s} for s in suggestions[:num_suggestions]]}
+        
+        # If query provided, get suggestions from service
         suggestions = await service_manager.call_service(
             "query_suggestions", "suggest",
             method="POST",
@@ -340,7 +432,13 @@ async def get_query_suggestions(query: str, dataset: str = "argsme", num_suggest
     
     except Exception as e:
         print(f"Error getting suggestions: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        # Return default suggestions on error
+        default_suggestions = {
+            "argsme": ["climate change", "vaccination", "gun control"],
+            "wikir": ["artificial intelligence", "machine learning", "data science"]
+        }
+        suggestions = default_suggestions.get(dataset, ["data", "information"])
+        return {"suggestions": [{"query": s} for s in suggestions[:num_suggestions]]}
 
 @app.get("/topics/{dataset}")
 async def get_dataset_topics(dataset: str):
@@ -394,6 +492,85 @@ async def suggest_api(request: Request):
         return JSONResponse(content=resp)
     except Exception as e:
         return JSONResponse(content={"suggestions": [], "error": str(e)}, status_code=500)
+
+@app.get("/document/{doc_id}", response_class=HTMLResponse)
+def view_document(request: Request, doc_id: str, dataset: str = "argsme"):
+    """View document details"""
+    try:
+        # Connect to database
+        db_path = "data/ir_database_combined.db"
+        if not os.path.exists(db_path):
+            return templates.TemplateResponse("document.html", {
+                "request": request,
+                "error": "Database not found",
+                "dataset": dataset
+            })
+        
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Query document based on dataset
+        if dataset.lower() == "argsme":
+            cursor.execute("""
+                SELECT doc_id, conclusion, premises_texts, source_title, topic, acquisition
+                FROM argsme_raw 
+                WHERE doc_id = ?
+            """, (doc_id,))
+            row = cursor.fetchone()
+            if row:
+                document = {
+                    "doc_id": doc_id,
+                    "conclusion": row[1] if row[1] else "No conclusion available",
+                    "premises_texts": row[2] if row[2] else "No premises available",
+                    "source_title": row[3] if row[3] else "Unknown Source",
+                    "topic": row[4] if row[4] else "General",
+                    "acquisition": row[5] if row[5] else "Unknown Date",
+                    "text": f"{row[1] if row[1] else ''} {row[2] if row[2] else ''}".strip(),
+                    "title": f"Argument {doc_id}",
+                    "stance": "Unknown"  # Not available in this schema
+                }
+            else:
+                document = None
+        
+        elif dataset.lower() == "wikir":
+            cursor.execute("""
+                SELECT doc_id, text 
+                FROM wikir_docs 
+                WHERE doc_id = ?
+            """, (doc_id,))
+            row = cursor.fetchone()
+            if row:
+                document = {
+                    "doc_id": doc_id,
+                    "text": row[1] if row[1] else "No text available",
+                    "title": f"Page {doc_id}"
+                }
+            else:
+                document = None
+        
+        else:
+            document = None
+        
+        conn.close()
+        
+        if document is None:
+            error = f"Document '{doc_id}' not found in {dataset} dataset"
+        else:
+            error = None
+        
+        return templates.TemplateResponse("document.html", {
+            "request": request,
+            "document": document,
+            "dataset": dataset,
+            "error": error
+        })
+        
+    except Exception as e:
+        return templates.TemplateResponse("document.html", {
+            "request": request,
+            "error": f"Error loading document: {str(e)}",
+            "dataset": dataset
+        })
 
 if __name__ == "__main__":
     import uvicorn

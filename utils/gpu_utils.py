@@ -106,7 +106,7 @@ class GPUAccelerator:
         return similarities.get()
     
     def create_faiss_index(self, embeddings: np.ndarray, use_gpu: bool = True, 
-                          index_type: str = "flat") -> Optional[faiss.Index]:
+                          index_type: str = "flat") -> Optional["faiss.Index"]:
         """
         Create a FAISS index for fast similarity search
         
@@ -165,7 +165,7 @@ class GPUAccelerator:
             logger.error(f"Failed to create FAISS index: {e}")
             return None
     
-    def search_faiss_index(self, index: faiss.Index, query_vectors: np.ndarray, 
+    def search_faiss_index(self, index: "faiss.Index", query_vectors: np.ndarray, 
                           top_k: int = 100) -> Tuple[np.ndarray, np.ndarray]:
         """
         Search using FAISS index
@@ -272,11 +272,11 @@ def cosine_similarity_gpu(query_vectors: np.ndarray, doc_vectors: np.ndarray,
     return get_gpu_accelerator().cosine_similarity_gpu(query_vectors, doc_vectors, top_k)
 
 def create_faiss_index(embeddings: np.ndarray, use_gpu: bool = True, 
-                      index_type: str = "flat") -> Optional[faiss.Index]:
+                      index_type: str = "flat") -> Optional["faiss.Index"]:
     """Create FAISS index - convenience function"""
     return get_gpu_accelerator().create_faiss_index(embeddings, use_gpu, index_type)
 
-def search_faiss_index(index: faiss.Index, query_vectors: np.ndarray, 
+def search_faiss_index(index: "faiss.Index", query_vectors: np.ndarray, 
                       top_k: int = 100) -> Tuple[np.ndarray, np.ndarray]:
     """Search FAISS index - convenience function"""
     return get_gpu_accelerator().search_faiss_index(index, query_vectors, top_k)

@@ -15,6 +15,7 @@ Provides intelligent query suggestions using multiple methods:
 import os
 import sqlite3
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Tuple
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -39,6 +40,15 @@ nltk.download('wordnet', quiet=True)
 nltk.download('punkt', quiet=True)
 
 app = FastAPI(title="Smart Query Suggestion Service")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Database path
 DB_PATH = "data/ir_database_combined.db"

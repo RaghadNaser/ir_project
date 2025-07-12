@@ -2,592 +2,930 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>IR Search Interface</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Information Retrieval System</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; color: white; margin-bottom: 30px; }
-        .header h1 { font-size: 2.5em; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        .header p { font-size: 1.2em; margin: 10px 0 0 0; opacity: 0.9; }
-        form { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 30px; }
-        .input-group { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-        .input-group label { min-width: 120px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 8px; }
-        .input-group input, .input-group select { flex: 1; padding: 12px 15px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 1em; transition: border-color 0.3s, box-shadow 0.3s; }
-        .input-group input:focus, .input-group select:focus { outline: none; border-color: #0077cc; box-shadow: 0 0 0 3px rgba(0,119,204,0.1); }
-        .input-group input[type="submit"] { background: linear-gradient(135deg, #0077cc, #005fa3); color: white; border: none; padding: 15px 30px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-        .input-group input[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,119,204,0.3); }
-        .icon { color: #0077cc; }
-        .result-count { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; font-weight: 600; color: #333; border-left: 4px solid #0077cc; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        th { background: #0077cc; color: white; padding: 15px; text-align: left; font-weight: 600; }
-        td { padding: 12px 15px; border-bottom: 1px solid #e1e5e9; }
-        tr:hover { background: #f8f9fa; }
-        .doc-link { color: #0077cc; text-decoration: none; font-weight: 500; }
-        .doc-link:hover { text-decoration: underline; }
-        .footer { text-align: center; color: white; margin-top: 40px; opacity: 0.8; }
-        .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid #ccc; border-top: 3px solid #2d3e50; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-results-box { text-align: center; color: #2d3e50; font-size: 1.1em; margin: 30px 0 20px 0; }
-        .topic-detect-section { background: #f8f9fa; border: 1.5px solid #d1d8e0; border-radius: 8px; padding: 18px 20px 12px 20px; margin: 30px 0 20px 0; box-shadow: 0 2px 8px rgba(44,62,80,0.04); }
-        .topic-detect-section h3 { margin-top: 0; color: #2d3e50; font-size: 1.18em; }
-        .topic-detect-results { margin-top: 18px; background: #fff; border-radius: 7px; border: 1px solid #d1d8e0; padding: 14px 18px; max-width: 600px; }
-        .topic-detect-topic { margin-bottom: 10px; padding-bottom: 7px; border-bottom: 1px dashed #d1d8e0; }
-        .topic-detect-topic:last-child { border-bottom: none; }
-        .topic-detect-keywords { color: #0077cc; font-size: 0.98em; }
-        .topic-detect-prob { color: #27ae60; font-size: 0.97em; margin-left: 8px; }
-        .topic-detect-error { color: #c0392b; margin-top: 10px; }
-        .topic-detect-inline { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-        .topic-detect-switch-label { font-size: 0.97em; color: #2d3e50; }
-        @media (max-width: 768px) { .container { padding: 15px; } .header h1 { font-size: 2em; } form { padding: 20px; } .input-group { flex-direction: column; align-items: stretch; } .input-group label { min-width: auto; margin-bottom: 5px; } }
-        @media (max-width: 480px) { .header h1 { font-size: 1.8em; } form { padding: 15px; } .input-group input, .input-group select { padding: 10px 12px; } }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .search-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .optional-services {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .optional-services h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .service-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .service-option {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .service-option:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+        }
+
+        .service-option label {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: #495057;
+            cursor: pointer;
+        }
+
+        .service-option input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .service-config {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e9ecef;
+            display: none;
+        }
+
+        .service-config.active {
+            display: block;
+        }
+
+        .config-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .config-row label {
+            min-width: 80px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .config-row input, .config-row select {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .service-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .result-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .result-item:hover {
+            background: #e3f2fd;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .result-rank {
+            background: #e74c3c;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .result-score {
+            background: #27ae60;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .result-id {
+            color: #7f8c8d;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 15px;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-card {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            text-align: center;
+        }
+
+        .detail-card h5 {
+            margin: 0 0 8px 0;
+            color: #495057;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .detail-card .value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .detail-card .rank {
+            color: #e74c3c;
+        }
+
+        .detail-card .score {
+            color: #27ae60;
+        }
+
+        .detail-card.tfidf {
+            border-left: 4px solid #f39c12;
+        }
+
+        .detail-card.embedding {
+            border-left: 4px solid #9b59b6;
+        }
+
+        .detail-card.fusion {
+            border-left: 4px solid #3498db;
+        }
+
+        .result-sources {
+            margin-bottom: 15px;
+        }
+
+        .source-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .source-tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .source-tag.tfidf {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .source-tag.embedding {
+            background: #e1bee7;
+            color: #4a148c;
+            border: 1px solid #ce93d8;
+        }
+
+        .fusion-method {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .result-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .result-actions a {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .result-actions a:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .result-actions a.primary {
+            background: #e74c3c;
+        }
+
+        .result-actions a.primary:hover {
+            background: #c0392b;
+        }
+
+        .result-details-section {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .result-details-section.active {
+            display: block;
+        }
+
+        .result-details-section h5 {
+            margin-top: 0;
+            color: #495057;
+        }
+
+        .result-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .weight-display {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: 600;
+            color: #3498db;
+        }
+
+        #query-suggestions {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+        }
+
+        #query-suggestions:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .result-details-grid div {
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin-bottom: 20px;
+        }
+
+        .execution-time {
+            background: #e8f5e8;
+            color: #2d5a2d;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .additional-results {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .additional-result {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .additional-result h4 {
+            color: #495057;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .topic-item, .suggestion-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #3498db;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1><i class="fa-solid fa-search"></i> Information Retrieval System</h1>
-        <p>Advanced Search with Multiple Representations</p>
-    </div>
     <div class="container">
-        <form method="post" id="search-form" style="position:relative;">
-            <div class="input-group" style="position:relative; min-width:320px; flex:2 1 320px;">
-                <label for="query"><i class="fa-solid fa-keyboard icon"></i>Query</label>
-                <input type="text" id="query" name="query" value="{{ query|default('') }}" required autocomplete="off" style="flex:1;">
-            </div>
-            <div class="input-group">
-                <label for="dataset"><i class="fa-solid fa-database icon"></i>Dataset</label>
-                <select id="dataset" name="dataset">
-                    <option value="argsme" {% if dataset == 'argsme' %}selected{% endif %}>ARGSME</option>
-                    <option value="wikir" {% if dataset == 'wikir' %}selected{% endif %}>WIKIR</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="top_k"><i class="fa-solid fa-list-ol icon"></i>Top K</label>
-                <input type="number" id="top_k" name="top_k" min="1" max="100" value="{{ top_k|default(10) }}">
-            </div>
-            <div class="input-group">
-                <label for="representation"><i class="fa-solid fa-layer-group icon"></i>Representation</label>
-                <select id="representation" name="representation">
-                    <option value="embedding" {% if selected_representation == 'embedding' %}selected{% endif %}>Embedding</option>
-                    <option value="tfidf" {% if selected_representation == 'tfidf' %}selected{% endif %}>TF-IDF</option>
-                    <option value="hybrid" {% if selected_representation == 'hybrid' %}selected{% endif %}>Hybrid</option>
-                </select>
-            </div>
-            <div class="input-group" style="flex:0 0 180px; align-self: flex-end;">
-                <input type="submit" value="Search">
-            </div>
-        </form>
-        <div id="results-area">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔍 Information Retrieval System</h1>
+            <p>Search through datasets using advanced methods</p>
+        </div>
+
+        <!-- Search Form -->
+        <div class="search-panel">
+            <form method="post" action="/" id="search-form">
+                <!-- Basic Search Parameters -->
+                <div class="form-group">
+                    <label for="query">Search Query:</label>
+                    <input type="text" name="query" id="query" class="form-control" 
+                           placeholder="Enter your search query..." 
+                           value="{{ query if query else '' }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dataset">Dataset:</label>
+                        <select name="dataset" id="dataset" class="form-control">
+                            {% for ds in datasets %}
+                            <option value="{{ ds }}" 
+                                    {% if dataset == ds %}selected{% endif %}>
+                                {{ ds.upper() }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="representation">Search Method:</label>
+                        <select name="representation" id="representation" class="form-control">
+                            {% for key, name in representations %}
+                            <option value="{{ key }}" 
+                                    {% if representation == key %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="top_k">Number of Results:</label>
+                        <select name="top_k" id="top_k" class="form-control">
+                            <option value="10" {% if not top_k or top_k == 10 %}selected{% endif %}>10</option>
+                            <option value="20" {% if top_k == 20 %}selected{% endif %}>20</option>
+                            <option value="50" {% if top_k == 50 %}selected{% endif %}>50</option>
+                            <option value="100" {% if top_k == 100 %}selected{% endif %}>100</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="method">Hybrid Method:</label>
+                        <select name="method" id="method" class="form-control">
+                            {% for key, name in hybrid_methods %}
+                            <option value="{{ key }}" 
+                                    {% if method == key %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Hybrid Configuration -->
+                <div id="hybrid-config" class="optional-services" style="display: none;">
+                    <h3>⚖️ Hybrid Configuration</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tfidf_weight">TF-IDF Weight:</label>
+                            <input type="range" name="tfidf_weight" id="tfidf_weight" 
+                                   min="0" max="1" step="0.1" value="{{ tfidf_weight if tfidf_weight else 0.4 }}"
+                                   oninput="updateWeightDisplay('tfidf_weight', 'tfidf_display')">
+                            <div class="weight-display">
+                                <span id="tfidf_display">{{ "%.1f"|format(tfidf_weight if tfidf_weight else 0.4) }}</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="embedding_weight">Embedding Weight:</label>
+                            <input type="range" name="embedding_weight" id="embedding_weight" 
+                                   min="0" max="1" step="0.1" value="{{ embedding_weight if embedding_weight else 0.6 }}"
+                                   oninput="updateWeightDisplay('embedding_weight', 'embedding_display')">
+                            <div class="weight-display">
+                                <span id="embedding_display">{{ "%.1f"|format(embedding_weight if embedding_weight else 0.6) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="first_stage_k">First Stage Results:</label>
+                        <select name="first_stage_k" id="first_stage_k" class="form-control">
+                            <option value="1000" {% if not first_stage_k or first_stage_k == 1000 %}selected{% endif %}>1000</option>
+                            <option value="2000" {% if first_stage_k == 2000 %}selected{% endif %}>2000</option>
+                            <option value="5000" {% if first_stage_k == 5000 %}selected{% endif %}>5000</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Optional Services -->
+                <div class="optional-services">
+                    <h3>📡 Optional Services</h3>
+                    <div class="service-options">
+                        <!-- Topic Detection -->
+                        <div class="service-option">
+                            <label>
+                                <input type="checkbox" name="enable_topic_detection" value="1" 
+                                       onchange="toggleServiceConfig('topic-config', this.checked)">
+                                🧠 Topic Detection
+                            </label>
+                            <div class="service-config" id="topic-config">
+                                <div class="config-row">
+                                    <label>Max Topics:</label>
+                                    <input type="number" name="topic_max_topics" value="5" min="1" max="20">
+                                </div>
+                                <div class="config-row">
+                                    <label>Min Score:</label>
+                                    <input type="number" name="topic_min_score" value="0.1" min="0" max="1" step="0.1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Query Suggestions -->
+                        <div class="service-option">
+                            <label>
+                                <input type="checkbox" name="enable_query_suggestion" value="1"
+                                       onchange="toggleServiceConfig('suggestion-config', this.checked)">
+                                💡 Smart Suggestions
+                            </label>
+                            <div class="service-config" id="suggestion-config">
+                                <div class="config-row">
+                                    <label>Method:</label>
+                                    <select name="suggestion_method">
+                                        <option value="hybrid">Hybrid (Best)</option>
+                                        <option value="semantic">Semantic</option>
+                                        <option value="popular">Popular</option>
+                                        <option value="autocomplete">Autocomplete</option>
+                                    </select>
+                                </div>
+                                <div class="config-row">
+                                    <label>Count:</label>
+                                    <input type="number" name="suggestion_count" value="8" min="1" max="20">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vector Store -->
+                        <div class="service-option">
+                            <label>
+                                <input type="checkbox" name="enable_vector_store" value="1"
+                                       onchange="toggleServiceConfig('vector-config', this.checked)">
+                                🚀 Vector Store
+                            </label>
+                            <div class="service-config" id="vector-config">
+                                <div class="config-row">
+                                    <label>Index Type:</label>
+                                    <select name="vector_index_type">
+                                        <option value="auto">Auto (Best)</option>
+                                        <option value="hnsw">HNSW (Fast)</option>
+                                        <option value="ivf">IVF (Balanced)</option>
+                                        <option value="flat">Flat (Accurate)</option>
+                                    </select>
+                                </div>
+                                <div class="config-row">
+                                    <label>Performance:</label>
+                                    <select name="vector_performance">
+                                        <option value="balanced">Balanced</option>
+                                        <option value="speed">Speed</option>
+                                        <option value="accuracy">Accuracy</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">🔍 Search</button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        {% if results is defined %}
+        <div class="results-section">
             {% if error %}
-                <div class="result-count" style="color:#c0392b;">{{ error }}</div>
-            {% endif %}
-            {% if results %}
-                <div class="result-count">
-                    <i class="fa-solid fa-list-ol"></i> Showing {{ results|length }} results
-                    {% if execution_time is defined and execution_time > 0 %}
-                        <span style="margin-left: 20px; color: #27ae60;">
-                            <i class="fa-solid fa-clock"></i> Execution time: {{ "%.3f"|format(execution_time) }}s
-                        </span>
+                <div class="error-message">
+                    <strong>Error:</strong> {{ error }}
+                </div>
+            {% else %}
+                {% if execution_time %}
+                <div class="execution-time">
+                    ⚡ Search completed in {{ "%.3f"|format(execution_time) }} seconds
+                </div>
+                {% endif %}
+
+                <div class="results-header">
+                    <h2>Search Results</h2>
+                    <div class="results-stats">
+                        {% if results %}
+                            Found {{ results|length }} results for "{{ query }}"
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if results %}
+                    {% for result in results %}
+                    <div class="result-item">
+                        <!-- Result Header -->
+                        <div class="result-header">
+                            <h3 class="result-title">Document #{{ loop.index }}</h3>
+                            <div>
+                                <span class="result-rank">Rank {{ result.get('rank', loop.index) }}</span>
+                                <span class="result-score">{{ "%.4f"|format(result.get('score', 0)) }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Document ID -->
+                        <div class="result-id">
+                            📄 <strong>ID:</strong> {{ result.get('doc_id', result.get('id', 'N/A')) }}
+                        </div>
+
+                        <!-- Detailed Scores and Rankings -->
+                        <div class="result-details">
+                            <!-- TF-IDF Details -->
+                            {% if result.get('tfidf_score') is not none %}
+                            <div class="detail-card tfidf">
+                                <h5>🔍 TF-IDF</h5>
+                                <div class="value score">{{ "%.4f"|format(result.get('tfidf_score', 0)) }}</div>
+                                <div class="rank">Rank: {{ result.get('tfidf_rank', 'N/A') }}</div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Embedding Details -->
+                            {% if result.get('embedding_score') is not none %}
+                            <div class="detail-card embedding">
+                                <h5>🧠 Embedding</h5>
+                                <div class="value score">{{ "%.4f"|format(result.get('embedding_score', 0)) }}</div>
+                                <div class="rank">Rank: {{ result.get('embedding_rank', 'N/A') }}</div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Final Score -->
+                            <div class="detail-card fusion">
+                                <h5>⚡ Final Score</h5>
+                                <div class="value score">{{ "%.4f"|format(result.score) }}</div>
+                                <div class="rank">Final Rank: {{ result.rank if result.rank else loop.index }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Sources and Fusion Method -->
+                        {% if result.get('sources') or result.get('fusion_method') %}
+                        <div class="result-sources">
+                            <div class="source-tags">
+                                {% if result.get('sources') %}
+                                    {% for source in result.get('sources') %}
+                                    <span class="source-tag {{ source }}">{{ source }}</span>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            {% if result.get('fusion_method') %}
+                            <span class="fusion-method">{{ result.get('fusion_method')|title }}</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Actions -->
+                        <div class="result-actions">
+                            <a href="/document/{{ result.get('doc_id', result.get('id', '')) }}?dataset={{ dataset }}" target="_blank" class="primary">📄 View Document</a>
+                            <a href="#" onclick="copyToClipboard('{{ result.get('doc_id', result.get('id', '')) }}')">📋 Copy ID</a>
+                            {% if result.get('sources') %}
+                            <a href="#" onclick="showResultDetails({{ loop.index }})">📊 Details</a>
+                            {% endif %}
+                        </div>
+
+                        <!-- Hidden Details Section -->
+                        <div id="details-{{ loop.index }}" class="result-details-section">
+                            <h5>📊 Detailed Information</h5>
+                            <div class="result-details-grid">
+                                {% if result.get('tfidf_score') is not none %}
+                                <div><strong>TF-IDF Score:</strong> {{ "%.6f"|format(result.get('tfidf_score', 0)) }}</div>
+                                <div><strong>TF-IDF Rank:</strong> {{ result.get('tfidf_rank', 'N/A') }}</div>
+                                {% endif %}
+                                {% if result.get('embedding_score') is not none %}
+                                <div><strong>Embedding Score:</strong> {{ "%.6f"|format(result.get('embedding_score', 0)) }}</div>
+                                <div><strong>Embedding Rank:</strong> {{ result.get('embedding_rank', 'N/A') }}</div>
+                                {% endif %}
+                                <div><strong>Final Score:</strong> {{ "%.6f"|format(result.get('score', 0)) }}</div>
+                                <div><strong>Final Rank:</strong> {{ result.get('rank', loop.index) }}</div>
+                                {% if result.get('sources') %}
+                                <div><strong>Sources:</strong> {{ result.get('sources')|join(', ') }}</div>
+                                {% endif %}
+                                {% if result.get('fusion_method') %}
+                                <div><strong>Fusion Method:</strong> {{ result.get('fusion_method')|title }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-results">
+                        <h3>😔 No results found</h3>
+                        <p>Try modifying your query or search method</p>
+                    </div>
+                {% endif %}
+
+                <!-- Additional Results from Optional Services -->
+                {% if topics or suggestions or vector_results %}
+                <div class="additional-results">
+                    {% if topics %}
+                    <div class="additional-result">
+                        <h4>🧠 Detected Topics</h4>
+                        {% for topic in topics %}
+                        <div class="topic-item">
+                            <strong>{{ topic.topic }}</strong> ({{ "%.2f"|format(topic.relevance_score) }})
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if suggestions %}
+                    <div class="additional-result">
+                        <h4>💡 Query Suggestions</h4>
+                        {% for suggestion in suggestions %}
+                        <div class="suggestion-item">
+                            <a href="/?query={{ suggestion.query }}&dataset={{ dataset }}&representation={{ representation }}">
+                                {{ suggestion.query }}
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if vector_results %}
+                    <div class="additional-result">
+                        <h4>🚀 Vector Store Results</h4>
+                        {% for result in vector_results[:5] %}
+                        <div class="suggestion-item">
+                            <strong>{{ result.doc_id }}</strong> ({{ "%.3f"|format(result.score) }})
+                        </div>
+                        {% endfor %}
+                    </div>
                     {% endif %}
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Doc ID</th>
-                            <th>Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in results %}
-                        <tr>
-                            <td>{{ loop.index }}</td>
-                            {% if r is mapping %}
-                                <td><a class="doc-link" href="/document/{{ dataset }}/{{ r['doc_id'] }}" target="_blank">{{ r['doc_id'] }}</a></td>
-                                <td>{{ "%.4f"|format(r["score"]) }}</td>
-                            {% else %}
-                                <td><a class="doc-link" href="/document/{{ dataset }}/{{ r[0] }}" target="_blank">{{ r[0] }}</a></td>
-                                <td>{{ "%.4f"|format(r[1]) }}</td>
-                            {% endif %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% elif query is defined %}
-                <div class="result-count" style="color:#c0392b;">No results found.</div>
+                {% endif %}
             {% endif %}
-        </div>
-        <div id="keyword-extract-section" style="margin-top:30px;">
-            <h3><i class="fa-solid fa-lightbulb"></i> Extract Keywords (Topic Detection)</h3>
-            <textarea id="keyword-docs-input" rows="4" style="width:100%;max-width:600px;" placeholder="Paste your text here or leave empty to use top search results"></textarea>
-            <button id="extract-keywords-btn" style="margin-top:10px; padding:8px 18px; background:#1976d2; color:#fff; border:none; border-radius:6px; font-weight:600;">
-                Extract Keywords
-            </button>
-            <div id="keyword-extract-results" style="margin-top:18px;"></div>
-        </div>
 
-        <div id="topic-detection-section" style="margin-top:30px;">
-            <h3><i class="fa-solid fa-brain"></i> Topic Detection</h3>
-            <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
-                <textarea id="topic-detect-input" rows="3" style="flex:1; min-width:300px; max-width:500px;" placeholder="Enter text to detect topics..."></textarea>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <select id="topic-detect-dataset" style="padding:8px 12px; border:1px solid #ddd; border-radius:4px;">
-                        <option value="argsme">ARGSME</option>
-                        <option value="wikir">WIKIR</option>
-                    </select>
-                    <button id="detect-topics-btn" style="padding:8px 18px; background:#27ae60; color:#fff; border:none; border-radius:6px; font-weight:600;">
-                        Detect Topics
-                    </button>
-                </div>
-            </div>
-            <div id="topic-detect-results" style="margin-top:18px;"></div>
-        </div>
-
-        <div id="topic-suggestion-section" style="margin-top:30px;">
-            <h3><i class="fa-solid fa-magic"></i> Topic Suggestions</h3>
-            <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
-                <input type="text" id="topic-suggest-input" style="flex:1; min-width:300px; max-width:500px; padding:12px 15px; border:2px solid #e1e5e9; border-radius:8px;" placeholder="Enter query to get topic suggestions...">
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <select id="topic-suggest-dataset" style="padding:8px 12px; border:1px solid #ddd; border-radius:4px;">
-                        <option value="argsme">ARGSME</option>
-                        <option value="wikir">WIKIR</option>
-                    </select>
-                    <button id="suggest-topics-btn" style="padding:8px 18px; background:#e74c3c; color:#fff; border:none; border-radius:6px; font-weight:600;">
-                        Get Suggestions
-                    </button>
-                </div>
-            </div>
-            <div id="topic-suggest-results" style="margin-top:18px;"></div>
-        </div>
-
-        <!-- New Section: Separated Service Architecture Testing -->
-        <div id="service-architecture-section" style="margin-top:40px; background:#f8f9fa; border:2px solid #e1e5e9; border-radius:12px; padding:25px;">
-            <h3 style="margin-top:0; color:#2d3e50; display:flex; align-items:center; gap:10px;">
-                <i class="fa-solid fa-network-wired" style="color:#7b68ee;"></i> 
-                Service Architecture Testing
-            </h3>
-            <p style="color:#666; margin-bottom:25px;">Test the new separated service architecture with vector store and traditional search options.</p>
-            
-            <!-- Unified Search Testing -->
-            <div style="background:#fff; border-radius:8px; padding:20px; margin-bottom:20px; border:1px solid #e1e5e9;">
-                <h4 style="margin-top:0; color:#2d3e50; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-search" style="color:#0077cc;"></i>
-                    Unified Search Comparison
-                </h4>
-                <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
-                    <input type="text" id="unified-search-input" style="flex:1; min-width:300px; padding:12px 15px; border:2px solid #e1e5e9; border-radius:8px;" placeholder="Enter search query...">
-                    <select id="unified-search-dataset" style="padding:10px 12px; border:1px solid #ddd; border-radius:4px;">
-                        <option value="argsme">ARGSME</option>
-                        <option value="wikir">WIKIR</option>
-                    </select>
-                    <input type="number" id="unified-search-topk" value="5" min="1" max="20" style="width:70px; padding:10px 12px; border:1px solid #ddd; border-radius:4px;">
-                </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button id="search-vector-store-btn" style="padding:10px 20px; background:#27ae60; color:#fff; border:none; border-radius:6px; font-weight:600;">
-                        🚀 Vector Store Search
-                    </button>
-                    <button id="search-traditional-btn" style="padding:10px 20px; background:#e67e22; color:#fff; border:none; border-radius:6px; font-weight:600;">
-                        🔍 Traditional Search
-                    </button>
-                    <button id="compare-both-btn" style="padding:10px 20px; background:#9b59b6; color:#fff; border:none; border-radius:6px; font-weight:600;">
-                        ⚡ Compare Both
-                    </button>
-                </div>
-                <div id="unified-search-results" style="margin-top:18px;"></div>
-            </div>
-
-            <!-- Embedding Generation Testing -->
-            <div style="background:#fff; border-radius:8px; padding:20px; margin-bottom:20px; border:1px solid #e1e5e9;">
-                <h4 style="margin-top:0; color:#2d3e50; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-brain" style="color:#ff6b6b;"></i>
-                    Embedding Generation
-                </h4>
-                <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
-                    <input type="text" id="embedding-input" style="flex:1; min-width:300px; padding:12px 15px; border:2px solid #e1e5e9; border-radius:8px;" placeholder="Enter text to generate embedding...">
-                    <select id="embedding-dataset" style="padding:10px 12px; border:1px solid #ddd; border-radius:4px;">
-                        <option value="argsme">ARGSME</option>
-                        <option value="wikir">WIKIR</option>
-                    </select>
-                    <button id="generate-embedding-btn" style="padding:10px 20px; background:#ff6b6b; color:#fff; border:none; border-radius:6px; font-weight:600;">
-                        Generate Embedding
-                    </button>
-                </div>
-                <div id="embedding-results" style="margin-top:18px;"></div>
-            </div>
-
-            <!-- Service Health Check -->
-            <div style="background:#fff; border-radius:8px; padding:20px; border:1px solid #e1e5e9;">
-                <h4 style="margin-top:0; color:#2d3e50; display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-heartbeat" style="color:#2ecc71;"></i>
-                    Service Health Status
-                </h4>
-                <button id="check-services-btn" style="padding:10px 20px; background:#2ecc71; color:#fff; border:none; border-radius:6px; font-weight:600; margin-bottom:15px;">
-                    Check All Services
-                </button>
-                <div id="service-health-results" style="margin-top:10px;"></div>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="/" style="color: #3498db; text-decoration: none; font-weight: 600; padding: 10px 20px; border: 2px solid #3498db; border-radius: 6px;">🔙 New Search</a>
             </div>
         </div>
-
-        <div class="footer">
-            <i class="fa-solid fa-leaf"></i> IR Project &copy; {{ 2024 }}
-        </div>
+        {% endif %}
     </div>
+
     <script>
-    document.getElementById('extract-keywords-btn').onclick = async function() {
-        let docs = document.getElementById('keyword-docs-input').value.trim();
-        // If textarea is empty, use top search results from the page
-        if (!docs) {
-            docs = [];
-            document.querySelectorAll('#results-area table tbody tr').forEach(tr => {
-                let tds = tr.querySelectorAll('td');
-                if (tds.length > 2) docs.push(tds[2].innerText);
-            });
-        } else {
-            docs = [docs];
-        }
-        if (docs.length === 0) {
-            document.getElementById('keyword-extract-results').innerHTML = '<span style="color:#c0392b;">No text provided.</span>';
-            return;
-        }
-        document.getElementById('keyword-extract-results').innerHTML = '<span class="loading-spinner"></span> Extracting...';
-        try {
-            const resp = await fetch('http://localhost:8006/extract_keywords', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ documents: docs, top_k: 10 })
-            });
-            const data = await resp.json();
-            if (data.keywords && data.keywords.length > 0) {
-                document.getElementById('keyword-extract-results').innerHTML =
-                    '<ul style="list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:10px;">' +
-                    data.keywords.map(kw => `<li style="background:#e3f2fd; color:#1976d2; border-radius:6px; padding:6px 14px; font-weight:600; font-size:1em;">${kw}</li>`).join('') +
-                    '</ul>';
-            } else {
-                document.getElementById('keyword-extract-results').innerHTML = '<span style="color:#c0392b;">No keywords found.</span>';
-            }
-        } catch (e) {
-            document.getElementById('keyword-extract-results').innerHTML = '<span style="color:#c0392b;">Error extracting keywords.</span>';
-        }
-    };
-
-    // Topic Detection functionality
-    document.getElementById('detect-topics-btn').onclick = async function() {
-        const text = document.getElementById('topic-detect-input').value.trim();
-        const dataset = document.getElementById('topic-detect-dataset').value;
-        
-        if (!text) {
-            document.getElementById('topic-detect-results').innerHTML = '<span style="color:#c0392b;">Please enter text to detect topics.</span>';
-            return;
-        }
-        
-        document.getElementById('topic-detect-results').innerHTML = '<span class="loading-spinner"></span> Detecting topics...';
-        
-        try {
-            const resp = await fetch('http://localhost:8006/detect-topics', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    query: text, 
-                    dataset: dataset,
-                    top_k: 5 
-                })
-            });
-            const data = await resp.json();
+        // Show/hide hybrid configuration based on search method
+        document.addEventListener('DOMContentLoaded', function() {
+            const representationSelect = document.getElementById('representation');
+            const hybridConfig = document.getElementById('hybrid-config');
             
-            if (data.detected_topics && data.detected_topics.length > 0) {
-                let resultsHtml = '<div style="background:#f8f9fa; border-radius:8px; padding:15px; border:1px solid #e1e5e9;">';
-                resultsHtml += '<h4 style="margin-top:0; color:#2d3e50;">🎯 Detected Topics:</h4>';
-                
-                data.detected_topics.forEach((topic, index) => {
-                    resultsHtml += `<div style="margin-bottom:10px; padding:10px; background:#fff; border-radius:6px; border-left:4px solid #27ae60;">`;
-                    resultsHtml += `<strong>Topic ${index + 1}:</strong> ${topic.keywords.join(', ')}<br>`;
-                    resultsHtml += `<span style="color:#27ae60; font-size:0.9em;">Confidence: ${(topic.probability * 100).toFixed(1)}%</span>`;
-                    resultsHtml += `</div>`;
-                });
-                
-                if (data.similar_topics && data.similar_topics.length > 0) {
-                    resultsHtml += '<h4 style="color:#2d3e50;">🔗 Similar Topics:</h4>';
-                    resultsHtml += '<div style="display:flex; flex-wrap:wrap; gap:8px;">';
-                    data.similar_topics.forEach(topic => {
-                        resultsHtml += `<span style="background:#e3f2fd; color:#1976d2; padding:4px 8px; border-radius:4px; font-size:0.9em;">${topic}</span>`;
-                    });
-                    resultsHtml += '</div>';
+            function toggleHybridConfig() {
+                if (representationSelect.value === 'hybrid') {
+                    hybridConfig.style.display = 'block';
+                } else {
+                    hybridConfig.style.display = 'none';
                 }
-                
-                resultsHtml += '</div>';
-                document.getElementById('topic-detect-results').innerHTML = resultsHtml;
-            } else {
-                document.getElementById('topic-detect-results').innerHTML = '<span style="color:#c0392b;">No topics detected.</span>';
             }
-        } catch (e) {
-            document.getElementById('topic-detect-results').innerHTML = '<span style="color:#c0392b;">Error detecting topics. Make sure the topic detection service is running.</span>';
-        }
-    };
+            
+            representationSelect.addEventListener('change', toggleHybridConfig);
+            toggleHybridConfig(); // Initial state
+            
+            // Load query suggestions if available
+            loadQuerySuggestions();
+        });
 
-    // Topic Suggestion functionality
-    document.getElementById('suggest-topics-btn').onclick = async function() {
-        const query = document.getElementById('topic-suggest-input').value.trim();
-        const dataset = document.getElementById('topic-suggest-dataset').value;
-        
-        if (!query) {
-            document.getElementById('topic-suggest-results').innerHTML = '<span style="color:#c0392b;">Please enter a query to get topic suggestions.</span>';
-            return;
+        function toggleServiceConfig(configId, isChecked) {
+            const config = document.getElementById(configId);
+            if (isChecked) {
+                config.classList.add('active');
+            } else {
+                config.classList.remove('active');
+            }
         }
-        
-        document.getElementById('topic-suggest-results').innerHTML = '<span class="loading-spinner"></span> Getting suggestions...';
-        
-        try {
-            const resp = await fetch('http://localhost:8006/suggest-topics', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    query: query, 
-                    dataset: dataset,
-                    top_k: 8 
-                })
+
+        function updateWeightDisplay(sliderId, displayId) {
+            const slider = document.getElementById(sliderId);
+            const display = document.getElementById(displayId);
+            display.textContent = parseFloat(slider.value).toFixed(1);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert('Document ID copied to clipboard!');
+            }, function() {
+                alert('Failed to copy Document ID');
             });
-            const data = await resp.json();
+        }
+
+        function showResultDetails(index) {
+            const details = document.getElementById('details-' + index);
+            if (details.classList.contains('active')) {
+                details.classList.remove('active');
+            } else {
+                details.classList.add('active');
+            }
+        }
+
+        // Query suggestions functionality
+        async function loadQuerySuggestions() {
+            const queryInput = document.getElementById('query');
+            const datasetSelect = document.getElementById('dataset');
             
-            if (data.suggested_topics && data.suggested_topics.length > 0) {
-                let resultsHtml = '<div style="background:#f8f9fa; border-radius:8px; padding:15px; border:1px solid #e1e5e9;">';
-                resultsHtml += '<h4 style="margin-top:0; color:#2d3e50;">💡 Topic Suggestions:</h4>';
-                resultsHtml += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">';
-                
-                data.suggested_topics.forEach(topic => {
-                    resultsHtml += `<div style="background:#fff; padding:10px; border-radius:6px; border-left:4px solid #e74c3c;">`;
-                    resultsHtml += `<strong>${topic.keywords.join(', ')}</strong><br>`;
-                    resultsHtml += `<span style="color:#e74c3c; font-size:0.9em;">Relevance: ${(topic.score * 100).toFixed(1)}%</span>`;
-                    resultsHtml += `</div>`;
-                });
-                
-                resultsHtml += '</div>';
-                
-                if (data.similar_topics && data.similar_topics.length > 0) {
-                    resultsHtml += '<h4 style="color:#2d3e50; margin-top:15px;">🔗 Related Topics:</h4>';
-                    resultsHtml += '<div style="display:flex; flex-wrap:wrap; gap:8px;">';
-                    data.similar_topics.forEach(topic => {
-                        resultsHtml += `<span style="background:#fff3cd; color:#856404; padding:4px 8px; border-radius:4px; font-size:0.9em;">${topic}</span>`;
-                    });
-                    resultsHtml += '</div>';
+            if (!queryInput.value.trim()) {
+                try {
+                    const response = await fetch(`/suggestions?dataset=${datasetSelect.value}&num_suggestions=8`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.suggestions && data.suggestions.length > 0) {
+                            showQuerySuggestions(data.suggestions);
+                        }
+                    }
+                } catch (error) {
+                    console.log('No suggestions available:', error);
                 }
-                
-                resultsHtml += '</div>';
-                document.getElementById('topic-suggest-results').innerHTML = resultsHtml;
-            } else {
-                document.getElementById('topic-suggest-results').innerHTML = '<span style="color:#c0392b;">No topic suggestions found.</span>';
             }
-        } catch (e) {
-            document.getElementById('topic-suggest-results').innerHTML = '<span style="color:#c0392b;">Error getting topic suggestions. Make sure the topic detection service is running.</span>';
         }
-    };
 
-    // New JavaScript for Separated Service Architecture
-
-    // Unified Search Functions
-    document.getElementById('search-vector-store-btn').onclick = async function() {
-        const query = document.getElementById('unified-search-input').value.trim();
-        const dataset = document.getElementById('unified-search-dataset').value;
-        const topK = document.getElementById('unified-search-topk').value;
-        
-        if (!query) {
-            document.getElementById('unified-search-results').innerHTML = '<span style="color:#c0392b;">Please enter a search query.</span>';
-            return;
-        }
-        
-        await performUnifiedSearch(query, dataset, topK, true, 'Vector Store');
-    };
-
-    document.getElementById('search-traditional-btn').onclick = async function() {
-        const query = document.getElementById('unified-search-input').value.trim();
-        const dataset = document.getElementById('unified-search-dataset').value;
-        const topK = document.getElementById('unified-search-topk').value;
-        
-        if (!query) {
-            document.getElementById('unified-search-results').innerHTML = '<span style="color:#c0392b;">Please enter a search query.</span>';
-            return;
-        }
-        
-        await performUnifiedSearch(query, dataset, topK, false, 'Traditional');
-    };
-
-    document.getElementById('compare-both-btn').onclick = async function() {
-        const query = document.getElementById('unified-search-input').value.trim();
-        const dataset = document.getElementById('unified-search-dataset').value;
-        const topK = document.getElementById('unified-search-topk').value;
-        
-        if (!query) {
-            document.getElementById('unified-search-results').innerHTML = '<span style="color:#c0392b;">Please enter a search query.</span>';
-            return;
-        }
-        
-        document.getElementById('unified-search-results').innerHTML = '<span class="loading-spinner"></span> Comparing both methods...';
-        
-        try {
-            const resp = await fetch(`http://localhost:8006/compare/${dataset}?query=${encodeURIComponent(query)}&top_k=${topK}`);
-            const data = await resp.json();
+        function showQuerySuggestions(suggestions) {
+            const queryInput = document.getElementById('query');
+            const suggestionSelect = document.createElement('select');
+            suggestionSelect.id = 'query-suggestions';
+            suggestionSelect.className = 'form-control';
+            suggestionSelect.style.marginBottom = '10px';
+            suggestionSelect.innerHTML = '<option value="">💡 Select a suggested query...</option>';
             
-            let resultsHtml = '<div style="background:#f8f9fa; border-radius:8px; padding:15px;">';
-            resultsHtml += '<h4 style="margin-top:0;">⚡ Performance Comparison</h4>';
-            
-            if (data.comparison.vector_store && data.comparison.traditional) {
-                resultsHtml += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">';
-                
-                // Vector Store Results
-                resultsHtml += '<div style="background:#e8f5e8; padding:15px; border-radius:6px; border-left:4px solid #27ae60;">';
-                resultsHtml += '<h5 style="margin-top:0; color:#27ae60;">🚀 Vector Store Pipeline</h5>';
-                resultsHtml += `<p><strong>Time:</strong> ${(data.comparison.vector_store.time * 1000).toFixed(1)}ms</p>`;
-                resultsHtml += `<p><strong>Results:</strong> ${data.comparison.vector_store.results_count}</p>`;
-                resultsHtml += '</div>';
-                
-                // Traditional Results
-                resultsHtml += '<div style="background:#fff3cd; padding:15px; border-radius:6px; border-left:4px solid #e67e22;">';
-                resultsHtml += '<h5 style="margin-top:0; color:#e67e22;">🔍 Traditional Search</h5>';
-                resultsHtml += `<p><strong>Time:</strong> ${(data.comparison.traditional.time * 1000).toFixed(1)}ms</p>`;
-                resultsHtml += `<p><strong>Results:</strong> ${data.comparison.traditional.results_count}</p>`;
-                resultsHtml += '</div>';
-                
-                resultsHtml += '</div>';
-                
-                // Speed comparison
-                const speedup = data.comparison.traditional.time / data.comparison.vector_store.time;
-                resultsHtml += `<div style="text-align:center; padding:10px; background:#e3f2fd; border-radius:6px;">`;
-                resultsHtml += `<strong>Vector Store is ${speedup.toFixed(1)}x faster!</strong>`;
-                resultsHtml += `</div>`;
-            } else {
-                resultsHtml += '<p style="color:#c0392b;">Error comparing methods. Check service status.</p>';
-            }
-            
-            resultsHtml += '</div>';
-            document.getElementById('unified-search-results').innerHTML = resultsHtml;
-            
-        } catch (e) {
-            document.getElementById('unified-search-results').innerHTML = '<span style="color:#c0392b;">Error comparing search methods.</span>';
-        }
-    };
-
-    async function performUnifiedSearch(query, dataset, topK, useVectorStore, methodName) {
-        document.getElementById('unified-search-results').innerHTML = `<span class="loading-spinner"></span> Searching with ${methodName}...`;
-        
-        try {
-            const resp = await fetch('http://localhost:8006/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    query: query,
-                    dataset: dataset,
-                    top_k: parseInt(topK),
-                    use_vector_store: useVectorStore
-                })
+            suggestions.forEach(suggestion => {
+                const option = document.createElement('option');
+                option.value = suggestion.query || suggestion;
+                option.textContent = suggestion.query || suggestion;
+                suggestionSelect.appendChild(option);
             });
-            const data = await resp.json();
             
-            let resultsHtml = '<div style="background:#f8f9fa; border-radius:8px; padding:15px;">';
-            resultsHtml += `<h4 style="margin-top:0;">${methodName} Results</h4>`;
-            resultsHtml += `<p><strong>Time:</strong> ${(data.total_time * 1000).toFixed(1)}ms | <strong>Method:</strong> ${data.method_used} | <strong>Results:</strong> ${data.total_results}</p>`;
-            
-            if (data.results && data.results.length > 0) {
-                resultsHtml += '<table style="width:100%; margin-top:10px; border-collapse:collapse;">';
-                resultsHtml += '<thead><tr style="background:#ddd;"><th style="padding:8px; text-align:left;">#</th><th style="padding:8px; text-align:left;">Document ID</th><th style="padding:8px; text-align:left;">Score</th></tr></thead>';
-                resultsHtml += '<tbody>';
-                
-                data.results.slice(0, parseInt(topK)).forEach((result, index) => {
-                    resultsHtml += `<tr style="border-bottom:1px solid #eee;"><td style="padding:8px;">${index + 1}</td><td style="padding:8px;">${result[0]}</td><td style="padding:8px;">${result[1].toFixed(4)}</td></tr>`;
-                });
-                
-                resultsHtml += '</tbody></table>';
-            } else {
-                resultsHtml += '<p style="color:#c0392b;">No results found.</p>';
-            }
-            
-            resultsHtml += '</div>';
-            document.getElementById('unified-search-results').innerHTML = resultsHtml;
-            
-        } catch (e) {
-            document.getElementById('unified-search-results').innerHTML = `<span style="color:#c0392b;">Error with ${methodName} search.</span>`;
-        }
-    }
-
-    // Embedding Generation Function
-    document.getElementById('generate-embedding-btn').onclick = async function() {
-        const text = document.getElementById('embedding-input').value.trim();
-        const dataset = document.getElementById('embedding-dataset').value;
-        
-        if (!text) {
-            document.getElementById('embedding-results').innerHTML = '<span style="color:#c0392b;">Please enter text to generate embedding.</span>';
-            return;
-        }
-        
-        document.getElementById('embedding-results').innerHTML = '<span class="loading-spinner"></span> Generating embedding...';
-        
-        try {
-            const resp = await fetch('http://localhost:8004/embed', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text: text,
-                    dataset: dataset
-                })
+            suggestionSelect.addEventListener('change', function() {
+                if (this.value) {
+                    queryInput.value = this.value;
+                    this.remove(); // Remove suggestions after selection
+                }
             });
-            const data = await resp.json();
             
-            let resultsHtml = '<div style="background:#f0f8ff; border-radius:8px; padding:15px; border:1px solid #b6d7ff;">';
-            resultsHtml += '<h4 style="margin-top:0; color:#0066cc;">🧠 Generated Embedding</h4>';
-            resultsHtml += `<p><strong>Text:</strong> "${data.text}"</p>`;
-            resultsHtml += `<p><strong>Dimension:</strong> ${data.dimension}</p>`;
-            resultsHtml += `<p><strong>Processing Time:</strong> ${(data.processing_time * 1000).toFixed(1)}ms</p>`;
-            resultsHtml += `<p><strong>First 10 values:</strong> [${data.embedding.slice(0, 10).map(v => v.toFixed(4)).join(', ')}...]</p>`;
-            resultsHtml += '</div>';
-            
-            document.getElementById('embedding-results').innerHTML = resultsHtml;
-            
-        } catch (e) {
-            document.getElementById('embedding-results').innerHTML = '<span style="color:#c0392b;">Error generating embedding. Check if embedding service is running.</span>';
+            queryInput.parentNode.insertBefore(suggestionSelect, queryInput);
         }
-    };
-
-    // Service Health Check Function
-    document.getElementById('check-services-btn').onclick = async function() {
-        document.getElementById('service-health-results').innerHTML = '<span class="loading-spinner"></span> Checking services...';
-        
-        const services = [
-            { name: 'Embedding Service', url: 'http://localhost:8004/health', port: 8004 },
-            { name: 'Vector Store Service', url: 'http://localhost:8007/health', port: 8007 },
-            { name: 'Unified Search Service', url: 'http://localhost:8006/health', port: 8006 }
-        ];
-        
-        let resultsHtml = '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px;">';
-        
-        for (const service of services) {
-            try {
-                const resp = await fetch(service.url);
-                const data = await resp.json();
-                
-                resultsHtml += `<div style="background:#e8f5e8; border:1px solid #27ae60; border-radius:6px; padding:15px;">`;
-                resultsHtml += `<h5 style="margin-top:0; color:#27ae60;">✅ ${service.name}</h5>`;
-                resultsHtml += `<p><strong>Port:</strong> ${service.port}</p>`;
-                resultsHtml += `<p><strong>Status:</strong> ${data.status || 'Healthy'}</p>`;
-                
-                if (data.indices_loaded) {
-                    resultsHtml += `<p><strong>Indices:</strong> ${Object.keys(data.indices_loaded).length} datasets</p>`;
-                }
-                if (data.loaded_models !== undefined) {
-                    resultsHtml += `<p><strong>Models:</strong> ${Array.isArray(data.loaded_models) ? data.loaded_models.length : Object.keys(data.loaded_models).length}</p>`;
-                }
-                
-                resultsHtml += `</div>`;
-                
-            } catch (e) {
-                resultsHtml += `<div style="background:#ffeaa7; border:1px solid:#e17055; border-radius:6px; padding:15px;">`;
-                resultsHtml += `<h5 style="margin-top:0; color:#e17055;">❌ ${service.name}</h5>`;
-                resultsHtml += `<p><strong>Port:</strong> ${service.port}</p>`;
-                resultsHtml += `<p><strong>Status:</strong> Not responding</p>`;
-                resultsHtml += `</div>`;
-            }
-        }
-        
-        resultsHtml += '</div>';
-        document.getElementById('service-health-results').innerHTML = resultsHtml;
-    };
     </script>
 </body>
 </html>

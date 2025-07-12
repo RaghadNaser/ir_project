@@ -5,6 +5,7 @@ Implements Sequential and Parallel hybrid approaches for better performance
 """
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Tuple
 import asyncio
@@ -26,6 +27,15 @@ app = FastAPI(
     title="Optimized Hybrid Search Service",
     description="Sequential and Parallel hybrid search with performance optimization",
     version="3.0.0",
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

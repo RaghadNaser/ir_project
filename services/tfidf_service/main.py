@@ -4,6 +4,7 @@ Optimized TF-IDF Service using DTM matching approach (as suggested by user)
 """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import numpy as np
@@ -20,6 +21,15 @@ import os
 import random
 
 app = FastAPI(title="DTM-Optimized TF-IDF Service")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class SearchRequest(BaseModel):
     dataset: str

@@ -1,6 +1,6 @@
 # Core Python packages
 pandas
-numpy
+numpy<2.0  # Pin to 1.x for FAISS compatibility
 scikit-learn
 joblib
 nltk

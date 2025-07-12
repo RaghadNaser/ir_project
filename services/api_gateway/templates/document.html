@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Document Details - {{ doc['doc_id'] }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Details - {{ document.doc_id if document else 'Document Viewer' }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         body {
@@ -11,6 +12,7 @@
             background: #f4f7fa;
             color: #222;
         }
+
         .header {
             background: #2d3e50;
             color: #fff;
@@ -20,58 +22,34 @@
             top: 0;
             z-index: 10;
         }
-        .header h2 {
+
+        .header h1 {
             margin: 0 0 0.2em 0;
             font-size: 2em;
             letter-spacing: 1px;
         }
+
         .header .dataset {
             font-size: 1em;
             color: #b0c4d6;
             letter-spacing: 2px;
         }
+
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 2.5em auto;
             background: #fff;
             border-radius: 10px;
             box-shadow: 0 4px 24px #e0e0e0;
             padding: 2em 2.5em 2em 2.5em;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 2em;
+
+        .navigation {
+            text-align: center;
+            margin-bottom: 20px;
         }
-        th, td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #f0f0f0;
-            text-align: left;
-            vertical-align: top;
-        }
-        th {
-            background: #f7fafc;
-            color: #2d3e50;
-            width: 180px;
-            font-weight: 600;
-            font-size: 1.05em;
-        }
-        tr:last-child td, tr:last-child th {
-            border-bottom: none;
-        }
-        .copy-btn {
-            background: none;
-            border: none;
-            color: #2d3e50;
-            cursor: pointer;
-            margin-left: 8px;
-            font-size: 1em;
-            transition: color 0.2s;
-        }
-        .copy-btn:hover {
-            color: #0077cc;
-        }
-        .back-btn {
+
+        .nav-button {
             display: inline-block;
             margin-top: 1em;
             padding: 10px 28px;
@@ -83,58 +61,280 @@
             cursor: pointer;
             box-shadow: 0 2px 8px #e0e0e0;
             transition: background 0.2s;
+            text-decoration: none;
+            margin: 0 10px;
         }
-        .back-btn:hover {
+
+        .nav-button:hover {
             background: #0077cc;
         }
-        @media (max-width: 600px) {
-            .container { padding: 1em 0.5em; }
-            th { width: 100px; font-size: 0.98em; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2em;
         }
+
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f7fafc;
+            color: #2d3e50;
+            width: 180px;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        tr:last-child td, tr:last-child th {
+            border-bottom: none;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #2d3e50;
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 1em;
+            transition: color 0.2s;
+        }
+
+        .copy-btn:hover {
+            color: #0077cc;
+        }
+
         .icon {
             margin-right: 6px;
             color: #0077cc;
         }
-    </style>
-    <script>
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text);
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+            text-align: center;
         }
-    </script>
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            background: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-button:hover {
+            background: #2980b9;
+        }
+
+        .action-button.secondary {
+            background: #6c757d;
+        }
+
+        .action-button.secondary:hover {
+            background: #5a6268;
+        }
+
+        @media (max-width: 600px) {
+            .container { 
+                padding: 1em 0.5em; 
+                margin: 1em auto;
+            }
+            th { 
+                width: 100px; 
+                font-size: 0.98em; 
+            }
+            .header {
+                padding: 1em;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="header">
-        <h2>
+        <h1>
             <i class="fa-solid fa-file-lines icon"></i>
-            Document: {{ doc['doc_id'] }}
-        </h2>
+            Document: {{ document.doc_id if document else 'Document Viewer' }}
+        </h1>
         <div class="dataset">
             <i class="fa-solid fa-database icon"></i>
-            Dataset: {{ dataset|upper }}
+            Dataset: {{ dataset.upper() if dataset else 'Unknown' }}
         </div>
     </div>
+
     <div class="container">
-        <table>
-            <tbody>
-            {% for key, value in doc.items() %}
-                <tr>
-                    <th>
-                        {% if key == 'doc_id' %}<i class="fa-solid fa-id-card icon"></i>{% endif %}
-                        {% if key == 'conclusion' %}<i class="fa-solid fa-lightbulb icon"></i>{% endif %}
-                        {% if key == 'topic' %}<i class="fa-solid fa-tag icon"></i>{% endif %}
-                        {{ key|replace('_', ' ')|title }}
-                    </th>
-                    <td style="white-space: pre-line;">
-                        {{ value }}
-                        <button class="copy-btn" title="Copy" data-copy="{{ value|e }}" onclick="copyToClipboard(this.getAttribute('data-copy'))">
-                            <i class="fa-regular fa-copy"></i>
-                        </button>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <button class="back-btn" onclick="window.close();"><i class="fa-solid fa-arrow-left"></i> Close</button>
+        <!-- Navigation -->
+        <div class="navigation">
+            <a href="/" class="nav-button"><i class="fa-solid fa-home"></i> Back to Search</a>
+            <a href="javascript:history.back()" class="nav-button"><i class="fa-solid fa-arrow-left"></i> Go Back</a>
+        </div>
+
+        {% if error %}
+            <!-- Error Message -->
+            <div class="error-message">
+                <h3><i class="fa-solid fa-exclamation-triangle"></i> Error Loading Document</h3>
+                <p>{{ error }}</p>
+                <div style="margin-top: 15px;">
+                    <a href="/" class="action-button"><i class="fa-solid fa-search"></i> Search Again</a>
+                </div>
+            </div>
+        {% elif document %}
+            <!-- Document Content in Table Format -->
+            <table>
+                <tbody>
+                {% for key, value in document.items() %}
+                    <tr>
+                        <th>
+                            {% if key == 'doc_id' %}<i class="fa-solid fa-id-card icon"></i>{% endif %}
+                            {% if key == 'text' %}<i class="fa-solid fa-file-text icon"></i>{% endif %}
+                            {% if key == 'title' %}<i class="fa-solid fa-heading icon"></i>{% endif %}
+                            {% if key == 'stance' %}<i class="fa-solid fa-balance-scale icon"></i>{% endif %}
+                            {% if key == 'topic' %}<i class="fa-solid fa-tag icon"></i>{% endif %}
+                            {% if key == 'argument_id' %}<i class="fa-solid fa-hashtag icon"></i>{% endif %}
+                            {% if key == 'page_id' %}<i class="fa-solid fa-file icon"></i>{% endif %}
+                            {% if key == 'conclusion' %}<i class="fa-solid fa-lightbulb icon"></i>{% endif %}
+                            {{ key|replace('_', ' ')|title }}
+                        </th>
+                        <td style="white-space: pre-line;">
+                            {{ value }}
+                            <button class="copy-btn" title="Copy" onclick="copyToClipboard('{{ value|e }}')">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button class="action-button" onclick="copyToClipboard('{{ document.doc_id }}')">
+                    <i class="fa-solid fa-id-card"></i> Copy Document ID
+                </button>
+                {% if document.text %}
+                <button class="action-button" onclick="copyToClipboard('{{ document.text|e }}')">
+                    <i class="fa-solid fa-file-text"></i> Copy Content
+                </button>
+                <button class="action-button" onclick="printDocument()">
+                    <i class="fa-solid fa-print"></i> Print Document
+                </button>
+                {% endif %}
+                
+                {% if document.text %}
+              
+                {% endif %}
+                <button class="action-button secondary" onclick="shareDocument()">
+                    <i class="fa-solid fa-share"></i> Share Document
+                </button>
+            </div>
+        {% else %}
+            <!-- Loading State -->
+            <div style="text-align: center; padding: 50px; color: #666;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 2em; margin-bottom: 20px;"></i>
+                <p>Loading document...</p>
+            </div>
+        {% endif %}
     </div>
+
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert('Copied to clipboard!');
+            }, function() {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('Copied to clipboard!');
+                } catch (err) {
+                    alert('Failed to copy to clipboard');
+                }
+                document.body.removeChild(textArea);
+            });
+        }
+
+        function printDocument() {
+            const documentTitle = document.querySelector('.header h1').textContent;
+            const tableContent = document.querySelector('table').outerHTML;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>${documentTitle}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h1 { color: #2d3e50; margin-bottom: 20px; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+                        th { background: #f7fafc; font-weight: 600; }
+                        .copy-btn { display: none; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${documentTitle}</h1>
+                    ${tableContent}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function shareDocument() {
+            const docId = '{{ document.doc_id if document else "" }}';
+            const dataset = '{{ dataset }}';
+            const shareUrl = window.location.origin + `/document/${docId}?dataset=${dataset}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: `Document ${docId}`,
+                    text: 'Check out this document from the IR System',
+                    url: shareUrl
+                }).then(() => {
+                    console.log('Document shared successfully');
+                }).catch((error) => {
+                    console.log('Error sharing document:', error);
+                    fallbackShare(shareUrl);
+                });
+            } else {
+                fallbackShare(shareUrl);
+            }
+        }
+
+        function fallbackShare(url) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Document link copied to clipboard!');
+                });
+            } else {
+                prompt('Copy this link to share the document:', url);
+            }
+        }
+    </script>
 </body>
 </html> 

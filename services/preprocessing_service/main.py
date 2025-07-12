@@ -1,6 +1,7 @@
 # services/preprocessing_service/main.py
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import re
 import nltk
@@ -24,6 +25,15 @@ app = FastAPI(
     title="Text Preprocessing Service",
     description="Service for text preprocessing including cleaning, tokenization, and stemming",
     version="1.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify exact origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 class TextRequest(BaseModel):

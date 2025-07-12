@@ -1,6 +1,7 @@
 # services/embedding_service/main.py
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import uvicorn
@@ -29,6 +30,15 @@ app = FastAPI(
     title="Optimized Embedding Service",
     description="GPU-accelerated embedding search service with FAISS indexing",
     version="2.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Global models dictionary
