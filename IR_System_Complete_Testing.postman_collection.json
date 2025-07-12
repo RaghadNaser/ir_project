@@ -1,0 +1,840 @@
+{
+  "info": {
+    "name": "IR System - Complete Testing Workflow",
+    "description": "مجموعة شاملة لاختبار نظام استرجاع المعلومات من البداية إلى النهاية",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "item": [
+    {
+      "name": "🔍 1. Health Checks - فحص صحة الخدمات",
+      "description": "التحقق من أن جميع الخدمات تعمل بشكل صحيح",
+      "item": [
+        {
+          "name": "Check API Gateway",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["health"]
+            }
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:8000/health",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "8000",
+                  "path": ["health"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\"status\": \"healthy\", \"services\": {\"preprocessing\": true, \"tfidf\": true, \"embedding\": true, \"hybrid\": true, \"topic_detection\": true, \"query_suggestions\": true}}"
+            }
+          ]
+        },
+        {
+          "name": "Check Preprocessing Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8002/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8002",
+              "path": ["health"]
+            }
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:8002/health",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "8002",
+                  "path": ["health"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\"status\": \"healthy\", \"service\": \"preprocessing_service\"}"
+            }
+          ]
+        },
+        {
+          "name": "Check TF-IDF Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8003/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8003",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Check Embedding Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8004/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8004",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Check Hybrid Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8005/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8005",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Check Topic Detection Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8006/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8006",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Check Query Suggestion Service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8010/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8010",
+              "path": ["health"]
+            }
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:8010/health",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "8010",
+                  "path": ["health"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\"status\": \"healthy\", \"service\": \"query_suggestion_service\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📝 2. Text Preprocessing - معالجة النصوص",
+      "description": "اختبار معالجة النصوص والاستعلامات",
+      "item": [
+        {
+          "name": "Preprocess Simple Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"What are the effects of climate change on the environment?\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8002/preprocess",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8002",
+              "path": ["preprocess"]
+            }
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"text\": \"What are the effects of climate change on the environment?\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:8002/preprocess",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "8002",
+                  "path": ["preprocess"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"original_text\": \"What are the effects of climate change on the environment?\",\n  \"processed_text\": \"effect climat chang environ\",\n  \"processing_steps\": [\n    \"cleaning\",\n    \"normalization\",\n    \"tokenization\",\n    \"stopword_removal\",\n    \"stemming\",\n    \"lemmatization\"\n  ],\n  \"token_count\": 4\n}"
+            }
+          ]
+        },
+        {
+          "name": "Preprocess Complex Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"How does artificial intelligence impact modern healthcare systems and patient outcomes?\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8002/preprocess",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8002",
+              "path": ["preprocess"]
+            }
+          }
+        },
+        {
+          "name": "Preprocess Arabic Text",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"ما هي تأثيرات التغير المناخي على البيئة؟\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8002/preprocess",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8002",
+              "path": ["preprocess"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔍 3. TF-IDF Search - البحث بـ TF-IDF",
+      "description": "اختبار البحث باستخدام TF-IDF",
+      "item": [
+        {
+          "name": "TF-IDF Search - ARGSME",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"argsme\",\n  \"query\": \"climate change environmental impact\",\n  \"top_k\": 10\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8003/search",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8003",
+              "path": ["search"]
+            }
+          }
+        },
+        {
+          "name": "TF-IDF Search - WIKIR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"wikir\",\n  \"query\": \"machine learning algorithms applications\",\n  \"top_k\": 15\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8003/search",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8003",
+              "path": ["search"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧠 4. Embedding Search - البحث بالتضمين",
+      "description": "اختبار البحث باستخدام BERT Embeddings",
+      "item": [
+        {
+          "name": "Embedding Search - ARGSME",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"argsme\",\n  \"query\": \"renewable energy benefits\",\n  \"top_k\": 10\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8004/search",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8004",
+              "path": ["search"]
+            }
+          }
+        },
+        {
+          "name": "Embedding Search - WIKIR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"wikir\",\n  \"query\": \"artificial intelligence healthcare\",\n  \"top_k\": 12\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8004/search",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8004",
+              "path": ["search"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔀 5. Hybrid Search - البحث الهجين",
+      "description": "اختبار البحث الهجين المتقدم",
+      "item": [
+        {
+          "name": "Hybrid Sequential Search - WIKIR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"wikir\",\n  \"query\": \"machine learning algorithms applications\",\n  \"top_k\": 15,\n  \"method\": \"sequential\",\n  \"first_stage_k\": 2000,\n  \"tfidf_weight\": 0.3,\n  \"embedding_weight\": 0.7\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8005/search",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8005",
+              "path": ["search"]
+            }
+          }
+        },
+        {
+          "name": "Hybrid Parallel Search - ARGSME",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"argsme\",\n  \"query\": \"renewable energy economic benefits\",\n  \"top_k\": 12,\n  \"method\": \"parallel\",\n  \"first_stage_k\": 1500,\n  \"tfidf_weight\": 0.5,\n  \"embedding_weight\": 0.5\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8005/search",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8005",
+              "path": ["search"]
+            }
+          }
+        },
+        {
+          "name": "Hybrid Fusion Search - ARGSME",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"argsme\",\n  \"query\": \"climate change policy solutions\",\n  \"top_k\": 10,\n  \"method\": \"fusion\",\n  \"tfidf_weight\": 0.4,\n  \"embedding_weight\": 0.6\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8005/search",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8005",
+              "path": ["search"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏷️ 6. Topic Detection - كشف المواضيع",
+      "description": "اختبار كشف المواضيع",
+      "item": [
+        {
+          "name": "Detect Topics - ARGSME",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"argsme\",\n  \"text\": \"Climate change is one of the most pressing issues of our time. It affects global temperatures, weather patterns, and ecosystems worldwide.\",\n  \"top_k\": 5\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8006/predict",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8006",
+              "path": ["predict"]
+            }
+          }
+        },
+        {
+          "name": "Get Dataset Topics - WIKIR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8006/topics?dataset=wikir",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8006",
+              "path": ["topics"],
+              "query": [
+                {
+                  "key": "dataset",
+                  "value": "wikir"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💡 7. Query Suggestions - اقتراح الاستعلامات",
+      "description": "اختبار اقتراح الاستعلامات",
+      "item": [
+        {
+          "name": "Smart Query Suggestions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"climate change\",\n  \"dataset\": \"argsme\",\n  \"method\": \"hybrid\",\n  \"top_k\": 5\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8010/suggest",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8010",
+              "path": ["suggest"]
+            }
+          }
+        },
+        {
+          "name": "Semantic Query Suggestions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"artificial intelligence\",\n  \"dataset\": \"wikir\",\n  \"method\": \"semantic\",\n  \"top_k\": 8\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8010/suggest",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8010",
+              "path": ["suggest"]
+            }
+          }
+        },
+        {
+          "name": "Popular Query Suggestions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"renewable energy policy\",\n  \"dataset\": \"argsme\",\n  \"method\": \"popular\",\n  \"top_k\": 6\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8010/suggest",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8010",
+              "path": ["suggest"]
+            }
+          }
+        },
+        {
+          "name": "Autocomplete Suggestions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"machine learn\",\n  \"dataset\": \"wikir\",\n  \"method\": \"autocomplete\",\n  \"top_k\": 5\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8010/suggest",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8010",
+              "path": ["suggest"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 8. Performance Testing - اختبار الأداء",
+      "description": "اختبار الأداء والمقارنة بين الطرق",
+      "item": [
+        {
+          "name": "Compare Hybrid Methods",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataset\": \"argsme\",\n  \"query\": \"artificial intelligence applications\",\n  \"top_k\": 10,\n  \"compare_methods\": [\"sequential\", \"parallel\", \"fusion\"]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8005/compare",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8005",
+              "path": ["compare"]
+            }
+          }
+        },
+        {
+          "name": "Get System Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8005/stats",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8005",
+              "path": ["stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔍 9. End-to-End Testing - اختبار شامل",
+      "description": "اختبار شامل للنظام من البداية إلى النهاية",
+      "item": [
+        {
+          "name": "Complete Search Workflow - ARGSME",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"What are the environmental benefits of renewable energy sources?\",\n  \"dataset\": \"argsme\",\n  \"method\": \"hybrid\",\n  \"top_k\": 10\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/search",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["search"]
+            }
+          }
+        },
+        {
+          "name": "Complete Search Workflow - WIKIR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"How does machine learning improve healthcare outcomes?\",\n  \"dataset\": \"wikir\",\n  \"method\": \"hybrid\",\n  \"top_k\": 15\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8000/search",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["search"]
+            }
+          }
+        },
+        {
+          "name": "Get Query Suggestions via Gateway",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/suggestions?query=climate&dataset=argsme&num_suggestions=5",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["suggestions"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "climate"
+                },
+                {
+                  "key": "dataset",
+                  "value": "argsme"
+                },
+                {
+                  "key": "num_suggestions",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Dataset Topics via Gateway",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/topics/wikir",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["topics", "wikir"]
+            }
+          }
+        },
+        {
+          "name": "Get System Statistics via Gateway",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/statistics",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8000",
+              "path": ["statistics"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set global variables if not already set",
+          "if (!pm.globals.get(\"processed_query\")) {",
+          "    pm.globals.set(\"processed_query\", \"climat chang food secur agricultur\");",
+          "}",
+          "",
+          "if (!pm.globals.get(\"tfidf_results\")) {",
+          "    pm.globals.set(\"tfidf_results\", \"[]\");",
+          "}",
+          "",
+          "if (!pm.globals.get(\"embedding_results\")) {",
+          "    pm.globals.set(\"embedding_results\", \"[]\");",
+          "}",
+          "",
+          "if (!pm.globals.get(\"hybrid_results\")) {",
+          "    pm.globals.set(\"hybrid_results\", \"[]\");",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test to check response time",
+          "pm.test(\"Response time is reasonable\", function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+          "});",
+          "",
+          "// Global test to check response format",
+          "pm.test(\"Response is valid JSON\", function () {",
+          "    pm.response.to.be.json;",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost",
+      "type": "string"
+    },
+    {
+      "key": "api_gateway_port",
+      "value": "8000",
+      "type": "string"
+    },
+    {
+      "key": "preprocessing_port",
+      "value": "8002",
+      "type": "string"
+    },
+    {
+      "key": "tfidf_port",
+      "value": "8003",
+      "type": "string"
+    },
+    {
+      "key": "embedding_port",
+      "value": "8004",
+      "type": "string"
+    },
+    {
+      "key": "hybrid_port",
+      "value": "8005",
+      "type": "string"
+    },
+    {
+      "key": "topic_port",
+      "value": "8006",
+      "type": "string"
+    },
+    {
+      "key": "suggestion_port",
+      "value": "8010",
+      "type": "string"
+    }
+  ]
+} 

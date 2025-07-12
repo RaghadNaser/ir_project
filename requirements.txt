@@ -1,0 +1,34 @@
+# Core Python packages
+pandas
+numpy
+scikit-learn
+joblib
+nltk
+sentence-transformers
+faiss-cpu
+rank-bm25
+h5py
+matplotlib
+
+# GPU acceleration libraries
+cupy-cuda12x  # For CUDA 12.x (adjust version based on your CUDA version)
+faiss-gpu  # GPU version of FAISS
+torch  # PyTorch for GPU operations
+
+# Web API
+fastapi
+uvicorn
+# httpx already included below for async HTTP requests
+
+# Progress bar
+tqdm
+
+# For CORS if needed in API Gateway
+fastapi[all]
+
+# Optional: For testing and docs
+pytest
+httpx
+
+# Memory optimization
+psutil  # For memory monitoring

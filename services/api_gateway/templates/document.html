@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Details - {{ doc['doc_id'] }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            background: #f4f7fa;
+            color: #222;
+        }
+        .header {
+            background: #2d3e50;
+            color: #fff;
+            padding: 1.5em 2em 1em 2em;
+            box-shadow: 0 2px 8px #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h2 {
+            margin: 0 0 0.2em 0;
+            font-size: 2em;
+            letter-spacing: 1px;
+        }
+        .header .dataset {
+            font-size: 1em;
+            color: #b0c4d6;
+            letter-spacing: 2px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2.5em auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 24px #e0e0e0;
+            padding: 2em 2.5em 2em 2.5em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2em;
+        }
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #f7fafc;
+            color: #2d3e50;
+            width: 180px;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+        tr:last-child td, tr:last-child th {
+            border-bottom: none;
+        }
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #2d3e50;
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 1em;
+            transition: color 0.2s;
+        }
+        .copy-btn:hover {
+            color: #0077cc;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 1em;
+            padding: 10px 28px;
+            background: #2d3e50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            box-shadow: 0 2px 8px #e0e0e0;
+            transition: background 0.2s;
+        }
+        .back-btn:hover {
+            background: #0077cc;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 1em 0.5em; }
+            th { width: 100px; font-size: 0.98em; }
+        }
+        .icon {
+            margin-right: 6px;
+            color: #0077cc;
+        }
+    </style>
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+        }
+    </script>
+</head>
+<body>
+    <div class="header">
+        <h2>
+            <i class="fa-solid fa-file-lines icon"></i>
+            Document: {{ doc['doc_id'] }}
+        </h2>
+        <div class="dataset">
+            <i class="fa-solid fa-database icon"></i>
+            Dataset: {{ dataset|upper }}
+        </div>
+    </div>
+    <div class="container">
+        <table>
+            <tbody>
+            {% for key, value in doc.items() %}
+                <tr>
+                    <th>
+                        {% if key == 'doc_id' %}<i class="fa-solid fa-id-card icon"></i>{% endif %}
+                        {% if key == 'conclusion' %}<i class="fa-solid fa-lightbulb icon"></i>{% endif %}
+                        {% if key == 'topic' %}<i class="fa-solid fa-tag icon"></i>{% endif %}
+                        {{ key|replace('_', ' ')|title }}
+                    </th>
+                    <td style="white-space: pre-line;">
+                        {{ value }}
+                        <button class="copy-btn" title="Copy" data-copy="{{ value|e }}" onclick="copyToClipboard(this.getAttribute('data-copy'))">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <button class="back-btn" onclick="window.close();"><i class="fa-solid fa-arrow-left"></i> Close</button>
+    </div>
+</body>
+</html> 
