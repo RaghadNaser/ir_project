@@ -39,11 +39,11 @@ app.add_middleware(
 class VectorStoreConfig:
     """Configuration for ARGSME vector store (correct name)"""
     index_type: str = "IVF"
-    nlist: int = 100
-    nprobe: int = 10
-    M: int = 16
-    efConstruction: int = 200
-    efSearch: int = 50
+    nlist: int = 1000        # Increased from 100 for better clustering
+    nprobe: int = 50         # Increased from 10 for better recall
+    M: int = 32              # Increased from 16 for better connectivity
+    efConstruction: int = 400 # Increased from 200 for better index quality
+    efSearch: int = 256      # Increased from 50 for better search quality
     m: int = 8
     nbits: int = 8
     use_gpu: bool = False
@@ -106,6 +106,7 @@ class VectorSearchRequest(BaseModel):
     query_vector: List[float]
     top_k: int = 10
     index_type: Optional[str] = "auto"  # "auto", "hnsw", "ivf", "pq", "flat"
+    score_normalization: Optional[str] = "softmax"  # "softmax", "minmax", "sigmoid", "rank", "none"
 
 class BatchVectorSearchRequest(BaseModel):
     dataset: str
@@ -159,10 +160,25 @@ class OptimizedVectorStoreService:
             return self._create_fallback_metadata(n_vectors, dataset)
         
         try:
-            # Try loading with pickle
-            metadata = joblib.load(metadata_path)
-            logger.info(f"    ✅ Metadata loaded successfully")
-            return metadata
+            # Try loading the document mapping file
+            doc_mapping = joblib.load(metadata_path)
+            
+            # Check if it's already a complete metadata dict or just a doc_mapping
+            if isinstance(doc_mapping, dict) and "doc_mapping" in doc_mapping:
+                # It's already complete metadata
+                logger.info(f"    ✅ Complete metadata loaded successfully")
+                return doc_mapping
+            else:
+                # It's just a document mapping, create complete metadata
+                logger.info(f"    ✅ Document mapping loaded, creating complete metadata")
+                return {
+                    "doc_mapping": doc_mapping,
+                    "dimension": 384,
+                    "n_embeddings": n_vectors,
+                    "index_type": "auto",
+                    "creation_time": time.time(),
+                    "fallback": False
+                }
         except Exception as e:
             logger.warning(f"    ⚠️ Metadata load failed: {e}")
             logger.info(f"    📝 Creating fallback metadata")
@@ -178,6 +194,41 @@ class OptimizedVectorStoreService:
             "creation_time": time.time(),
             "fallback": True
         }
+    
+    def _normalize_scores(self, scores: List[float], method: str = "softmax") -> List[float]:
+        """Normalize similarity scores to improve sklearn compatibility"""
+        if not scores:
+            return []
+        
+        scores_array = np.array(scores)
+        
+        if method == "softmax":
+            # Softmax normalization - converts to probability distribution
+            exp_scores = np.exp(scores_array - np.max(scores_array))  # Subtract max for numerical stability
+            return (exp_scores / np.sum(exp_scores)).tolist()
+        
+        elif method == "minmax":
+            # Min-Max normalization - scales to [0, 1] range
+            min_score, max_score = np.min(scores_array), np.max(scores_array)
+            if max_score == min_score:
+                return [0.5] * len(scores)  # All same score
+            return ((scores_array - min_score) / (max_score - min_score)).tolist()
+        
+        elif method == "sigmoid":
+            # Sigmoid normalization - maps to [0, 1] with sigmoid function
+            return (1 / (1 + np.exp(-scores_array))).tolist()
+        
+        elif method == "rank":
+            # Rank-based normalization - higher rank = higher score
+            ranks = np.argsort(np.argsort(-scores_array))  # Descending rank order
+            return (ranks / len(ranks)).tolist()
+        
+        elif method == "none":
+            # No normalization - return original scores
+            return scores
+        else:
+            # Default: no normalization
+            return scores
     
     def _estimate_index_memory(self, index, index_type: str, dimension: int = 384) -> float:
         """Estimate memory usage of loaded index in MB"""
@@ -232,12 +283,13 @@ class OptimizedVectorStoreService:
                     # Define paths based on dataset
                     if dataset == "argsme":
                         base_path = "data/vectors/argsme/embedding/"
+                        doc_mapping_path = f"{base_path}argsme_bert_doc_mapping.joblib"  # Use correct doc mapping
                         if index_type == "hnsw":
                             index_path = f"{base_path}faiss_index_hnsw.bin"
-                            metadata_path = f"{base_path}faiss_metadata_hnsw.joblib"
+                            metadata_path = doc_mapping_path
                         elif index_type == "ivf":
                             index_path = f"{base_path}faiss_index_ivf.bin"
-                            metadata_path = f"{base_path}faiss_metadata_ivf.joblib"  # Use correct metadata file
+                            metadata_path = doc_mapping_path
                         else:
                             continue
                     else:  # wikir
@@ -247,7 +299,7 @@ class OptimizedVectorStoreService:
                             metadata_path = f"{base_path}wikir_faiss_hnsw_metadata.joblib"
                         elif index_type == "ivf":
                             index_path = f"{base_path}faiss_index_ivf.bin"
-                            metadata_path = f"{base_path}faiss_metadata_ivf.joblib"  # Use existing metadata
+                            metadata_path = f"{base_path}faiss_metadata_ivf.joblib"
                         else:
                             continue
                     
@@ -343,7 +395,7 @@ class OptimizedVectorStoreService:
             logger.warning(f"Failed to optimize {index_type} parameters: {e}")
     
     def search_vector(self, query_vector: np.ndarray, dataset: str, top_k: int = 10, 
-                     index_type: str = "auto") -> Dict[str, Any]:
+                     index_type: str = "auto", score_normalization: str = "softmax") -> Dict[str, Any]:
         """Perform optimized vector similarity search"""
         try:
             search_start_time = time.time()
@@ -389,13 +441,29 @@ class OptimizedVectorStoreService:
             distances, indices = index.search(query_vector_normalized, actual_top_k)
             faiss_time = time.time() - faiss_start
             
-            # Convert results
+            # Convert results with score normalization
             results = []
+            # Create reverse mapping from index to document ID
+            reverse_mapping = {v: k for k, v in doc_mapping.items()}
+            
+            # Extract raw scores for normalization with safety checks
+            raw_scores = []
+            for i in range(len(distances[0])):
+                score = float(distances[0][i])
+                # Safety check: clamp extremely large values
+                if score > 1e6 or score < -1e6 or not np.isfinite(score):
+                    score = 0.0
+                raw_scores.append(score)
+            
+            # Apply score normalization (multiple methods available)
+            normalized_scores = self._normalize_scores(raw_scores, method=score_normalization)
+            
             for i in range(len(distances[0])):
                 doc_idx = int(indices[0][i])
-                similarity = float(distances[0][i])
+                similarity = normalized_scores[i]  # Use normalized score
                 
-                doc_id = doc_mapping.get(doc_idx, f"{dataset}_doc_{doc_idx}")
+                # Use reverse mapping to get original document ID
+                doc_id = reverse_mapping.get(doc_idx, f"{dataset}_doc_{doc_idx}")
                 results.append((doc_id, similarity))
             
             total_time = time.time() - search_start_time
@@ -492,7 +560,8 @@ async def search_vector(request: VectorSearchRequest):
             query_vector=query_vector,
             dataset=request.dataset,
             top_k=request.top_k,
-            index_type=request.index_type or "auto"
+            index_type=request.index_type or "auto",
+            score_normalization=request.score_normalization or "softmax"
         )
         
         return VectorSearchResponse(**results)
