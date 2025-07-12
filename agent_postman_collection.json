@@ -1,0 +1,472 @@
+{
+	"info": {
+		"_postman_id": "agent-service-collection",
+		"name": "Agent Service Collection",
+		"description": "Postman collection for testing the Advanced Conversational Agent Service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8011/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8011",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Chat with Agent",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"message\": \"ما هو الذكاء الاصطناعي؟\",\n    \"session_id\": null,\n    \"dataset\": \"argsme\",\n    \"conversation_mode\": \"interactive\",\n    \"max_results\": 10,\n    \"include_topics\": true,\n    \"include_suggestions\": true\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8011/chat",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8011",
+					"path": [
+						"chat"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Continue Conversation",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"session_id\": \"agent_session_1234567890\",\n    \"message\": \"اشرح لي أكثر عن التعلم الآلي\",\n    \"dataset\": \"argsme\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8011/conversation",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8011",
+					"path": [
+						"conversation"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Active Sessions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8011/sessions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8011",
+					"path": [
+						"sessions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Session",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8011/sessions/agent_session_1234567890",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8011",
+					"path": [
+						"sessions",
+						"agent_session_1234567890"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Agent Chat via API Gateway",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"message\": \"أفضل طرق تعلم البرمجة\",\n    \"session_id\": null,\n    \"dataset\": \"wikir\",\n    \"conversation_mode\": \"interactive\",\n    \"max_results\": 5,\n    \"include_topics\": true,\n    \"include_suggestions\": true\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/agent/chat",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"agent",
+						"chat"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Agent Sessions via API Gateway",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/agent/sessions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"agent",
+						"sessions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Test Different Conversation Modes",
+			"item": [
+				{
+					"name": "Interactive Mode",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"تطور التكنولوجيا الحديثة\",\n    \"session_id\": null,\n    \"dataset\": \"argsme\",\n    \"conversation_mode\": \"interactive\",\n    \"max_results\": 10,\n    \"include_topics\": true,\n    \"include_suggestions\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8011/chat",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8011",
+							"path": [
+								"chat"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Direct Mode",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"أثر الإنترنت على المجتمع\",\n    \"session_id\": null,\n    \"dataset\": \"argsme\",\n    \"conversation_mode\": \"direct\",\n    \"max_results\": 5,\n    \"include_topics\": false,\n    \"include_suggestions\": false\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8011/chat",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8011",
+							"path": [
+								"chat"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Analytical Mode",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"حلل لي موضوع الذكاء الاصطناعي\",\n    \"session_id\": null,\n    \"dataset\": \"wikir\",\n    \"conversation_mode\": \"analytical\",\n    \"max_results\": 15,\n    \"include_topics\": true,\n    \"include_suggestions\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8011/chat",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8011",
+							"path": [
+								"chat"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test Different Datasets",
+			"item": [
+				{
+					"name": "ARGSME Dataset",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"climate change arguments\",\n    \"session_id\": null,\n    \"dataset\": \"argsme\",\n    \"conversation_mode\": \"interactive\",\n    \"max_results\": 10,\n    \"include_topics\": true,\n    \"include_suggestions\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8011/chat",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8011",
+							"path": [
+								"chat"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "WikiIR Dataset",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"machine learning algorithms\",\n    \"session_id\": null,\n    \"dataset\": \"wikir\",\n    \"conversation_mode\": \"interactive\",\n    \"max_results\": 10,\n    \"include_topics\": true,\n    \"include_suggestions\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8011/chat",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8011",
+							"path": [
+								"chat"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test Intent Recognition",
+			"item": [
+				{
+					"name": "Search Intent",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"ابحث عن معلومات عن الذكاء الاصطناعي\",\n    \"session_id\": null,\n    \"dataset\": \"argsme\",\n    \"conversation_mode\": \"interactive\",\n    \"max_results\": 10,\n    \"include_topics\": true,\n    \"include_suggestions\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8011/chat",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8011",
+							"path": [
+								"chat"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Explain Intent",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"اشرح لي ما هو التعلم الآلي\",\n    \"session_id\": null,\n    \"dataset\": \"wikir\",\n    \"conversation_mode\": \"interactive\",\n    \"max_results\": 10,\n    \"include_topics\": true,\n    \"include_suggestions\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8011/chat",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8011",
+							"path": [
+								"chat"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Compare Intent",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"قارن بين الذكاء الاصطناعي والتعلم الآلي\",\n    \"session_id\": null,\n    \"dataset\": \"wikir\",\n    \"conversation_mode\": \"interactive\",\n    \"max_results\": 10,\n    \"include_topics\": true,\n    \"include_suggestions\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8011/chat",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8011",
+							"path": [
+								"chat"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Analyze Intent",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"حلل تأثير التكنولوجيا على التعليم\",\n    \"session_id\": null,\n    \"dataset\": \"argsme\",\n    \"conversation_mode\": \"interactive\",\n    \"max_results\": 10,\n    \"include_topics\": true,\n    \"include_suggestions\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8011/chat",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8011",
+							"path": [
+								"chat"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8011",
+			"type": "string"
+		},
+		{
+			"key": "api_gateway_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+} 

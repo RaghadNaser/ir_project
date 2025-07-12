@@ -35,6 +35,30 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
+        .header-actions {
+            margin-top: 20px;
+        }
+
+        .agent-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .agent-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+
         .search-panel {
             background: white;
             padding: 30px;
@@ -179,6 +203,44 @@
             background: linear-gradient(135deg, #2980b9, #3498db);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-topic-suggestions {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-topic-suggestions:hover {
+            background: linear-gradient(135deg, #8e44ad, #9b59b6);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(155, 89, 182, 0.3);
+        }
+
+        .btn-topic-info {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-topic-info:hover {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(52, 152, 219, 0.3);
         }
 
         .results-section {
@@ -405,6 +467,104 @@
             color: #3498db;
         }
 
+        .weight-balance-container {
+            margin-bottom: 25px;
+            text-align: center;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .weight-balance-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .weight-balance-bar {
+            width: 100%;
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 15px;
+            position: relative;
+            margin-bottom: 15px;
+            box-shadow: inset 0 3px 6px rgba(0,0,0,0.15);
+            border: 3px solid #dee2e6;
+            overflow: hidden;
+        }
+
+        .weight-balance-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #f39c12, #e67e22, #9b59b6, #8e44ad);
+            border-radius: 12px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 40%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .weight-balance-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .weight-balance-labels {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .tfidf-label {
+            color: #d35400;
+            background: rgba(243, 156, 18, 0.1);
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 2px solid #f39c12;
+        }
+
+        .embedding-label {
+            color: #8e44ad;
+            background: rgba(155, 89, 182, 0.1);
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 2px solid #9b59b6;
+        }
+
+        .weight-balance-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .weight-balance-bar:hover .weight-balance-percentage {
+            opacity: 1;
+        }
+
         #query-suggestions {
             background: #f8f9fa;
             border: 2px solid #e9ecef;
@@ -413,6 +573,124 @@
         #query-suggestions:focus {
             border-color: #3498db;
             box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        /* Smart Suggestions Panel */
+        .smart-suggestions-panel {
+            margin-top: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            background: #f8f9fa;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .smart-suggestions-panel:hover {
+            border-color: #3498db;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+        }
+
+        .suggestions-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .suggestions-title {
+            font-size: 14px;
+        }
+
+        .suggestions-method {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .suggestions-container {
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .suggestion-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .suggestion-item:hover {
+            border-color: #3498db;
+            background: #e3f2fd;
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        }
+
+        .suggestion-text {
+            flex: 1;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .suggestion-score {
+            background: #27ae60;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .suggestion-type {
+            background: #f39c12;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .suggestions-loading {
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-suggestions {
+            text-align: center;
+            color: #6c757d;
+            padding: 20px;
+            font-style: italic;
         }
 
         .result-details-grid div {
@@ -462,6 +740,291 @@
             border-bottom: 1px solid #dee2e6;
         }
 
+        .topics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .topic-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .topic-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            border-color: #9b59b6;
+        }
+
+        .topic-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .topic-icon {
+            font-size: 18px;
+            margin-right: 8px;
+        }
+
+        .topic-name {
+            font-weight: 600;
+            color: #2c3e50;
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .topic-score {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .topic-details {
+            margin-bottom: 12px;
+        }
+
+        .topic-stat {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .topic-actions {
+            text-align: center;
+        }
+
+        .btn-topic-search {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-topic-search:hover {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+        }
+
+        .topic-suggestions-panel, .topic-detection-panel {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-top: 15px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .topic-suggestions-header, .topic-detection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .topic-suggestions-header h4, .topic-detection-header h4 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .btn-close {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-close:hover {
+            background: #c0392b;
+        }
+
+        .topic-suggestion-item, .topic-detection-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .topic-suggestion-item:hover, .topic-detection-item:hover {
+            background: #e3f2fd;
+            border-color: #3498db;
+        }
+
+        .topic-suggestion-header, .topic-detection-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .topic-suggestion-icon, .topic-detection-icon {
+            font-size: 16px;
+            margin-right: 8px;
+        }
+
+        .topic-suggestion-name, .topic-detection-name {
+            font-weight: 600;
+            color: #2c3e50;
+            flex: 1;
+        }
+
+        .topic-suggestion-frequency, .topic-detection-score {
+            background: #9b59b6;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .topic-suggestion-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-topic-detect {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-topic-detect:hover {
+            background: linear-gradient(135deg, #e67e22, #f39c12);
+            transform: translateY(-1px);
+        }
+
+        .topic-detection-details {
+            margin-top: 8px;
+        }
+
+        .topic-detection-stat {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .topic-detection-stat span:first-child {
+            color: #6c757d;
+        }
+
+        .topic-detection-stat span:last-child {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .topic-model-info-panel {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-top: 15px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .model-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .model-info-header h4 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .model-info-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .model-info-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .info-label {
+            display: block;
+            color: #6c757d;
+            font-size: 11px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            display: block;
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .info-value.error {
+            color: #e74c3c;
+        }
+
+        .info-value.success {
+            color: #27ae60;
+        }
+
+        .model-info-item.error {
+            background: #fdf2f2;
+            border-color: #f5c6cb;
+        }
+
         .topic-item, .suggestion-item {
             background: white;
             padding: 10px;
@@ -469,15 +1032,37 @@
             border-radius: 6px;
             border-left: 3px solid #3498db;
         }
+
+        .agent-service-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .agent-service-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .service-description {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #6c757d;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
-        <div class="header">
+    <div class="header">
             <h1>🔍 Information Retrieval System</h1>
             <p>Search through datasets using advanced methods</p>
-        </div>
+            <div class="header-actions">
+                <a href="/agent" class="agent-link">🤖 Intelligent Agent</a>
+    </div>
+            </div>
 
         <!-- Search Form -->
         <div class="search-panel">
@@ -488,6 +1073,21 @@
                     <input type="text" name="query" id="query" class="form-control" 
                            placeholder="Enter your search query..." 
                            value="{{ query if query else '' }}" required>
+                    
+                    <!-- Smart Suggestions Panel -->
+                    <div id="smart-suggestions-panel" class="smart-suggestions-panel" style="display: none;">
+                        <div class="suggestions-header">
+                            <span class="suggestions-title">💡 Smart Suggestions</span>
+                            <span class="suggestions-method" id="suggestions-method">Hybrid</span>
+            </div>
+                        <div class="suggestions-container" id="suggestions-container">
+                            <!-- Suggestions will be loaded here -->
+            </div>
+                        <div class="suggestions-loading" id="suggestions-loading" style="display: none;">
+                            <div class="loading-spinner"></div>
+                            <span>Loading suggestions...</span>
+            </div>
+            </div>
                 </div>
 
                 <div class="form-row">
@@ -499,9 +1099,9 @@
                                     {% if dataset == ds %}selected{% endif %}>
                                 {{ ds.upper() }}
                             </option>
-                            {% endfor %}
+                        {% endfor %}
                         </select>
-                    </div>
+        </div>
 
                     <div class="form-group">
                         <label for="representation">Search Method:</label>
@@ -512,9 +1112,9 @@
                                 {{ name }}
                             </option>
                             {% endfor %}
-                        </select>
-                    </div>
+                    </select>
                 </div>
+            </div>
 
                 <div class="form-row">
                     <div class="form-group">
@@ -525,7 +1125,7 @@
                             <option value="50" {% if top_k == 50 %}selected{% endif %}>50</option>
                             <option value="100" {% if top_k == 100 %}selected{% endif %}>100</option>
                         </select>
-                    </div>
+        </div>
 
                     <div class="form-group">
                         <label for="method">Hybrid Method:</label>
@@ -536,31 +1136,45 @@
                                 {{ name }}
                             </option>
                             {% endfor %}
-                        </select>
-                    </div>
+                    </select>
                 </div>
+            </div>
 
                 <!-- Hybrid Configuration -->
                 <div id="hybrid-config" class="optional-services" style="display: none;">
                     <h3>⚖️ Hybrid Configuration</h3>
+                    
+                    <!-- Weight Balance Bar -->
+                    <div class="weight-balance-container">
+                        <div class="weight-balance-title">⚖️ Weight Distribution</div>
+                        <div class="weight-balance-bar">
+                            <div class="weight-balance-fill" id="weight-balance-fill"></div>
+                            <div class="weight-balance-percentage" id="weight-balance-percentage">40% TF-IDF</div>
+                        </div>
+                        <div class="weight-balance-labels">
+                            <span class="tfidf-label">🔍 TF-IDF</span>
+                            <span class="embedding-label">🧠 Embedding</span>
+                        </div>
+        </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="tfidf_weight">TF-IDF Weight:</label>
                             <input type="range" name="tfidf_weight" id="tfidf_weight" 
-                                   min="0" max="1" step="0.1" value="{{ tfidf_weight if tfidf_weight else 0.4 }}"
-                                   oninput="updateWeightDisplay('tfidf_weight', 'tfidf_display')">
+                                   min="0" max="1" step="0.05" value="{{ tfidf_weight if tfidf_weight else 0.4 }}"
+                                   oninput="updateWeights('tfidf')">
                             <div class="weight-display">
-                                <span id="tfidf_display">{{ "%.1f"|format(tfidf_weight if tfidf_weight else 0.4) }}</span>
+                                <span id="tfidf_display">{{ "%.2f"|format(tfidf_weight if tfidf_weight else 0.4) }}</span>
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label for="embedding_weight">Embedding Weight:</label>
                             <input type="range" name="embedding_weight" id="embedding_weight" 
-                                   min="0" max="1" step="0.1" value="{{ embedding_weight if embedding_weight else 0.6 }}"
-                                   oninput="updateWeightDisplay('embedding_weight', 'embedding_display')">
+                                   min="0" max="1" step="0.05" value="{{ embedding_weight if embedding_weight else 0.6 }}"
+                                   oninput="updateWeights('embedding')">
                             <div class="weight-display">
-                                <span id="embedding_display">{{ "%.1f"|format(embedding_weight if embedding_weight else 0.6) }}</span>
+                                <span id="embedding_display">{{ "%.2f"|format(embedding_weight if embedding_weight else 0.6) }}</span>
                             </div>
                         </div>
                     </div>
@@ -571,8 +1185,8 @@
                             <option value="1000" {% if not first_stage_k or first_stage_k == 1000 %}selected{% endif %}>1000</option>
                             <option value="2000" {% if first_stage_k == 2000 %}selected{% endif %}>2000</option>
                             <option value="5000" {% if first_stage_k == 5000 %}selected{% endif %}>5000</option>
-                        </select>
-                    </div>
+                    </select>
+                </div>
                 </div>
 
                 <!-- Optional Services -->
@@ -595,6 +1209,23 @@
                                     <label>Min Score:</label>
                                     <input type="number" name="topic_min_score" value="0.1" min="0" max="1" step="0.1">
                                 </div>
+                                <div class="config-row">
+                                    <label>Dataset:</label>
+                                    <select name="topic_dataset" id="topic_dataset">
+                                        <option value="argsme">ARGSME (Debates)</option>
+                                        <option value="wikir">WikiIR (Wikipedia)</option>
+                                    </select>
+                                </div>
+                                <div class="config-row">
+                                    <button type="button" onclick="loadTopicSuggestions()" class="btn-topic-suggestions">
+                                        Load Topic Suggestions
+                                    </button>
+                                </div>
+                                <div class="config-row">
+                                    <button type="button" onclick="loadTopicModelInfo()" class="btn-topic-info">
+                                        Model Info
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -608,47 +1239,33 @@
                             <div class="service-config" id="suggestion-config">
                                 <div class="config-row">
                                     <label>Method:</label>
-                                    <select name="suggestion_method">
+                                    <select name="suggestion_method" id="suggestion_method">
                                         <option value="hybrid">Hybrid (Best)</option>
                                         <option value="semantic">Semantic</option>
                                         <option value="popular">Popular</option>
                                         <option value="autocomplete">Autocomplete</option>
-                                    </select>
-                                </div>
+                    </select>
+                </div>
                                 <div class="config-row">
                                     <label>Count:</label>
                                     <input type="number" name="suggestion_count" value="8" min="1" max="20">
                                 </div>
                             </div>
-                        </div>
+            </div>
 
-                        <!-- Vector Store -->
+
+
+                        <!-- Intelligent Agent -->
                         <div class="service-option">
                             <label>
-                                <input type="checkbox" name="enable_vector_store" value="1"
-                                       onchange="toggleServiceConfig('vector-config', this.checked)">
-                                🚀 Vector Store
+                                <a href="/agent" class="agent-service-link">
+                                    🤖 Intelligent Agent
+                                </a>
                             </label>
-                            <div class="service-config" id="vector-config">
-                                <div class="config-row">
-                                    <label>Index Type:</label>
-                                    <select name="vector_index_type">
-                                        <option value="auto">Auto (Best)</option>
-                                        <option value="hnsw">HNSW (Fast)</option>
-                                        <option value="ivf">IVF (Balanced)</option>
-                                        <option value="flat">Flat (Accurate)</option>
-                                    </select>
-                                </div>
-                                <div class="config-row">
-                                    <label>Performance:</label>
-                                    <select name="vector_performance">
-                                        <option value="balanced">Balanced</option>
-                                        <option value="speed">Speed</option>
-                                        <option value="accuracy">Accuracy</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+                            <div class="service-description">
+                                <p>Interactive AI agent for natural language queries and intelligent search assistance</p>
+        </div>
+    </div>
                     </div>
                 </div>
 
@@ -743,7 +1360,6 @@
                         <!-- Actions -->
                         <div class="result-actions">
                             <a href="/document/{{ result.get('doc_id', result.get('id', '')) }}?dataset={{ dataset }}" target="_blank" class="primary">📄 View Document</a>
-                            <a href="#" onclick="copyToClipboard('{{ result.get('doc_id', result.get('id', '')) }}')">📋 Copy ID</a>
                             {% if result.get('sources') %}
                             <a href="#" onclick="showResultDetails({{ loop.index }})">📊 Details</a>
                             {% endif %}
@@ -781,16 +1397,43 @@
                 {% endif %}
 
                 <!-- Additional Results from Optional Services -->
-                {% if topics or suggestions or vector_results %}
+                {% if topics or suggestions %}
                 <div class="additional-results">
                     {% if topics %}
                     <div class="additional-result">
                         <h4>🧠 Detected Topics</h4>
-                        {% for topic in topics %}
-                        <div class="topic-item">
-                            <strong>{{ topic.topic }}</strong> ({{ "%.2f"|format(topic.relevance_score) }})
+                        <div class="topics-grid">
+                            {% for topic in topics %}
+                            <div class="topic-card">
+                                <div class="topic-header">
+                                    <span class="topic-icon">🏷️</span>
+                                    <span class="topic-name">{{ topic.topic }}</span>
+                                    <span class="topic-score">{{ "%.2f"|format(topic.relevance_score) }}</span>
+                                </div>
+                                <div class="topic-details">
+                                    <div class="topic-stat">
+                                        <span class="stat-label">Frequency:</span>
+                                        <span class="stat-value">{{ topic.frequency }}</span>
+                                    </div>
+                                    <div class="topic-stat">
+                                        <span class="stat-label">Coverage:</span>
+                                        <span class="stat-value">{{ "%.1f"|format(topic.coverage_ratio * 100) }}%</span>
+                                    </div>
+                                    {% if topic.doc_count %}
+                                    <div class="topic-stat">
+                                        <span class="stat-label">Documents:</span>
+                                        <span class="stat-value">{{ topic.doc_count }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="topic-actions">
+                                    <button onclick="searchTopic('{{ topic.topic }}')" class="btn-topic-search">
+                                        🔍 Search Topic
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
                     </div>
                     {% endif %}
 
@@ -807,16 +1450,7 @@
                     </div>
                     {% endif %}
 
-                    {% if vector_results %}
-                    <div class="additional-result">
-                        <h4>🚀 Vector Store Results</h4>
-                        {% for result in vector_results[:5] %}
-                        <div class="suggestion-item">
-                            <strong>{{ result.doc_id }}</strong> ({{ "%.3f"|format(result.score) }})
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+
                 </div>
                 {% endif %}
             {% endif %}
@@ -837,7 +1471,7 @@
             function toggleHybridConfig() {
                 if (representationSelect.value === 'hybrid') {
                     hybridConfig.style.display = 'block';
-                } else {
+            } else {
                     hybridConfig.style.display = 'none';
                 }
             }
@@ -845,23 +1479,65 @@
             representationSelect.addEventListener('change', toggleHybridConfig);
             toggleHybridConfig(); // Initial state
             
+            // Initialize weights
+            updateWeights('tfidf');
+            
             // Load query suggestions if available
             loadQuerySuggestions();
         });
 
-        function toggleServiceConfig(configId, isChecked) {
-            const config = document.getElementById(configId);
-            if (isChecked) {
-                config.classList.add('active');
+        function updateWeights(changedSlider) {
+            const tfidfSlider = document.getElementById('tfidf_weight');
+            const embeddingSlider = document.getElementById('embedding_weight');
+            const tfidfDisplay = document.getElementById('tfidf_display');
+            const embeddingDisplay = document.getElementById('embedding_display');
+            const balanceFill = document.getElementById('weight-balance-fill');
+            const balancePercentage = document.getElementById('weight-balance-percentage');
+            
+            let tfidfWeight = parseFloat(tfidfSlider.value);
+            let embeddingWeight = parseFloat(embeddingSlider.value);
+            
+            // Ensure weights sum to 1
+            if (changedSlider === 'tfidf') {
+                embeddingWeight = Math.max(0, 1 - tfidfWeight);
+                embeddingSlider.value = embeddingWeight;
             } else {
-                config.classList.remove('active');
+                tfidfWeight = Math.max(0, 1 - embeddingWeight);
+                tfidfSlider.value = tfidfWeight;
             }
+            
+            // Ensure weights are within bounds
+            tfidfWeight = Math.max(0, Math.min(1, tfidfWeight));
+            embeddingWeight = Math.max(0, Math.min(1, embeddingWeight));
+            
+            // Update displays
+            tfidfDisplay.textContent = tfidfWeight.toFixed(2);
+            embeddingDisplay.textContent = embeddingWeight.toFixed(2);
+            
+            // Update balance bar
+            const tfidfPercent = tfidfWeight * 100;
+            balanceFill.style.width = tfidfPercent + '%';
+            
+            // Update percentage display
+            balancePercentage.textContent = `${tfidfPercent.toFixed(0)}% TF-IDF`;
+            
+            // Update balance bar colors with enhanced gradient
+            const gradientStops = [
+                `#f39c12 0%`,
+                `#e67e22 ${Math.max(0, tfidfPercent - 20)}%`,
+                `#9b59b6 ${tfidfPercent}%`,
+                `#8e44ad 100%`
+            ];
+            balanceFill.style.background = `linear-gradient(45deg, ${gradientStops.join(', ')})`;
+            
+            // Log for debugging
+            console.log(`Weights updated - TF-IDF: ${tfidfWeight.toFixed(2)}, Embedding: ${embeddingWeight.toFixed(2)}`);
         }
 
         function updateWeightDisplay(sliderId, displayId) {
             const slider = document.getElementById(sliderId);
             const display = document.getElementById(displayId);
-            display.textContent = parseFloat(slider.value).toFixed(1);
+            display.textContent = parseFloat(slider.value).toFixed(2);
         }
 
         function copyToClipboard(text) {
@@ -870,6 +1546,311 @@
             }, function() {
                 alert('Failed to copy Document ID');
             });
+        }
+
+        // Topic Detection Functions
+        async function loadTopicSuggestions() {
+            const dataset = document.getElementById('topic_dataset').value;
+            const maxTopics = document.querySelector('input[name="topic_max_topics"]').value;
+            
+            try {
+                // Call topic detection service directly
+                const response = await fetch(`http://localhost:8006/topics?dataset=${dataset}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.topics && data.topics.length > 0) {
+                        // Limit topics to maxTopics
+                        const limitedTopics = data.topics.slice(0, parseInt(maxTopics));
+                        showTopicSuggestions(limitedTopics, []);
+                    } else {
+                        showTopicError('No topic suggestions available');
+                    }
+                } else {
+                    showTopicError('Failed to load topic suggestions');
+                }
+            } catch (error) {
+                showTopicError('Error loading topic suggestions: ' + error.message);
+            }
+        }
+
+        function showTopicSuggestions(suggestions, relatedTopics) {
+            const container = document.getElementById('topic-suggestions-container');
+            if (!container) {
+                createTopicSuggestionsContainer();
+            }
+            
+            const suggestionsContainer = document.getElementById('topic-suggestions-container');
+            suggestionsContainer.innerHTML = '';
+            
+            suggestions.forEach((topicObj, index) => {
+                // Extract topic name from object
+                const topicName = topicObj.topic || topicObj;
+                const frequency = topicObj.frequency || relatedTopics[index]?.frequency || 0;
+                
+                const topicElement = document.createElement('div');
+                topicElement.className = 'topic-suggestion-item';
+                topicElement.innerHTML = `
+                    <div class="topic-suggestion-header">
+                        <span class="topic-suggestion-name">${topicName}</span>
+                        <span class="topic-suggestion-frequency">${frequency}</span>
+                    </div>
+                    <div class="topic-suggestion-actions">
+                        <button class="btn-topic-detect" data-topic="${topicName}">
+                            Detect Topics
+                        </button>
+                        <button class="btn-topic-search" data-topic="${topicName}">
+                            Search
+                        </button>
+                    </div>
+                `;
+                
+                // Add event listeners
+                const detectBtn = topicElement.querySelector('.btn-topic-detect');
+                const searchBtn = topicElement.querySelector('.btn-topic-search');
+                
+                detectBtn.addEventListener('click', () => detectTopicsForQuery(topicName));
+                searchBtn.addEventListener('click', () => searchTopic(topicName));
+                
+                suggestionsContainer.appendChild(topicElement);
+            });
+            
+            document.getElementById('topic-suggestions-panel').style.display = 'block';
+        }
+
+        function createTopicSuggestionsContainer() {
+            const topicConfig = document.getElementById('topic-config');
+            const panel = document.createElement('div');
+            panel.id = 'topic-suggestions-panel';
+            panel.className = 'topic-suggestions-panel';
+            panel.style.display = 'none';
+            panel.innerHTML = `
+                <div class="topic-suggestions-header">
+                    <h4>🧠 Available Topics</h4>
+                    <button onclick="closeTopicSuggestions()" class="btn-close">✕</button>
+                </div>
+                <div id="topic-suggestions-container" class="topic-suggestions-container"></div>
+            `;
+            topicConfig.appendChild(panel);
+        }
+
+        function closeTopicSuggestions() {
+            document.getElementById('topic-suggestions-panel').style.display = 'none';
+        }
+
+        function showTopicError(message) {
+            alert('Topic Detection Error: ' + message);
+        }
+
+        async function detectTopicsForQuery(query) {
+            const dataset = document.getElementById('topic_dataset').value;
+            const maxTopics = document.querySelector('input[name="topic_max_topics"]').value;
+            const minScore = document.querySelector('input[name="topic_min_score"]').value;
+            
+            try {
+                const response = await fetch('/topics/detect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        dataset: dataset,
+                        max_topics: parseInt(maxTopics),
+                        min_relevance_score: parseFloat(minScore)
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        showTopicDetectionResults(data.data);
+                    } else {
+                        showTopicError(data.message || 'Failed to detect topics');
+                    }
+                } else {
+                    showTopicError('Failed to detect topics');
+                }
+            } catch (error) {
+                showTopicError('Error detecting topics: ' + error.message);
+            }
+        }
+
+        function showTopicDetectionResults(data) {
+            const container = document.getElementById('topic-detection-results');
+            if (!container) {
+                createTopicDetectionResultsContainer();
+            }
+            
+            const resultsContainer = document.getElementById('topic-detection-results');
+            resultsContainer.innerHTML = '';
+            
+            if (data.detected_topics && data.detected_topics.length > 0) {
+                data.detected_topics.forEach(topic => {
+                    const topicElement = document.createElement('div');
+                    topicElement.className = 'topic-detection-item';
+                    topicElement.innerHTML = `
+                        <div class="topic-detection-header">
+                            <span class="topic-detection-icon">🎯</span>
+                            <span class="topic-detection-name">${topic.topic}</span>
+                            <span class="topic-detection-score">${topic.relevance_score.toFixed(2)}</span>
+                        </div>
+                        <div class="topic-detection-details">
+                            <div class="topic-detection-stat">
+                                <span>Frequency:</span>
+                                <span>${topic.frequency}</span>
+                            </div>
+                            <div class="topic-detection-stat">
+                                <span>Coverage:</span>
+                                <span>${(topic.coverage_ratio * 100).toFixed(1)}%</span>
+                            </div>
+                        </div>
+                    `;
+                    resultsContainer.appendChild(topicElement);
+                });
+            } else {
+                resultsContainer.innerHTML = '<p>No topics detected for this query.</p>';
+            }
+            
+            document.getElementById('topic-detection-panel').style.display = 'block';
+        }
+
+        function createTopicDetectionResultsContainer() {
+            const topicConfig = document.getElementById('topic-config');
+            const panel = document.createElement('div');
+            panel.id = 'topic-detection-panel';
+            panel.className = 'topic-detection-panel';
+            panel.style.display = 'none';
+            panel.innerHTML = `
+                <div class="topic-detection-header">
+                    <h4>🎯 Detected Topics</h4>
+                    <button onclick="closeTopicDetection()" class="btn-close">✕</button>
+                </div>
+                <div id="topic-detection-results" class="topic-detection-results"></div>
+            `;
+            topicConfig.appendChild(panel);
+        }
+
+        function closeTopicDetection() {
+            document.getElementById('topic-detection-panel').style.display = 'none';
+        }
+
+        function searchTopic(topic) {
+            document.getElementById('query').value = topic;
+            document.getElementById('search-form').submit();
+        }
+
+        async function loadTopicModelInfo() {
+            const dataset = document.getElementById('topic_dataset').value;
+            
+            try {
+                const response = await fetch(`/topics/model-info?dataset=${dataset}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data) {
+                        showTopicModelInfo(data.data);
+                    } else {
+                        showTopicError('No model info available');
+                    }
+                } else {
+                    showTopicError('Failed to load model info');
+                }
+            } catch (error) {
+                showTopicError('Error loading model info: ' + error.message);
+            }
+        }
+
+        function showTopicModelInfo(modelInfo) {
+            const container = document.getElementById('topic-model-info-container');
+            if (!container) {
+                createTopicModelInfoContainer();
+            }
+            
+            const infoContainer = document.getElementById('topic-model-info-container');
+            
+            // Check if model is loaded
+            if (modelInfo.status === 'model_not_loaded' || modelInfo.status === 'error') {
+                infoContainer.innerHTML = `
+                    <div class="model-info-header">
+                        <h4>⚠️ Model Status</h4>
+                        <button onclick="closeTopicModelInfo()" class="btn-close">✕</button>
+                    </div>
+                    <div class="model-info-content">
+                        <div class="model-info-item error">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value error">${modelInfo.status === 'model_not_loaded' ? 'Model Not Loaded' : 'Error'}</span>
+                        </div>
+                        <div class="model-info-item">
+                            <span class="info-label">Dataset:</span>
+                            <span class="info-value">${modelInfo.dataset}</span>
+                        </div>
+                        ${modelInfo.error ? `
+                        <div class="model-info-item error">
+                            <span class="info-label">Error:</span>
+                            <span class="info-value error">${modelInfo.error}</span>
+                        </div>
+                        ` : ''}
+                        <div class="model-info-item">
+                            <span class="info-label">Note:</span>
+                            <span class="info-value">Please check if the model files exist and the service is running properly.</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                infoContainer.innerHTML = `
+                    <div class="model-info-header">
+                        <h4>ℹ️ Model Information</h4>
+                        <button onclick="closeTopicModelInfo()" class="btn-close">✕</button>
+                    </div>
+                    <div class="model-info-content">
+                        <div class="model-info-item">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value success">Loaded</span>
+                        </div>
+                        <div class="model-info-item">
+                            <span class="info-label">Dataset:</span>
+                            <span class="info-value">${modelInfo.dataset}</span>
+                        </div>
+                        <div class="model-info-item">
+                            <span class="info-label">Total Documents:</span>
+                            <span class="info-value">${modelInfo.total_documents}</span>
+                        </div>
+                        <div class="model-info-item">
+                            <span class="info-label">Total Keywords:</span>
+                            <span class="info-value">${modelInfo.total_keywords}</span>
+                        </div>
+                        <div class="model-info-item">
+                            <span class="info-label">Unique Keywords:</span>
+                            <span class="info-value">${modelInfo.unique_keywords}</span>
+                        </div>
+                        <div class="model-info-item">
+                            <span class="info-label">Global Topics:</span>
+                            <span class="info-value">${modelInfo.global_topics_count}</span>
+                        </div>
+                        <div class="model-info-item">
+                            <span class="info-label">Processing Time:</span>
+                            <span class="info-value">${modelInfo.processing_time}s</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('topic-model-info-panel').style.display = 'block';
+        }
+
+        function createTopicModelInfoContainer() {
+            const topicConfig = document.getElementById('topic-config');
+            const panel = document.createElement('div');
+            panel.id = 'topic-model-info-panel';
+            panel.className = 'topic-model-info-panel';
+            panel.style.display = 'none';
+            panel.innerHTML = `
+                <div id="topic-model-info-container" class="topic-model-info-container"></div>
+            `;
+            topicConfig.appendChild(panel);
+        }
+
+        function closeTopicModelInfo() {
+            document.getElementById('topic-model-info-panel').style.display = 'none';
         }
 
         function showResultDetails(index) {
@@ -885,47 +1866,154 @@
         async function loadQuerySuggestions() {
             const queryInput = document.getElementById('query');
             const datasetSelect = document.getElementById('dataset');
+            const suggestionsPanel = document.getElementById('smart-suggestions-panel');
+            const suggestionsCheckbox = document.querySelector('input[name="enable_query_suggestion"]');
             
-            if (!queryInput.value.trim()) {
-                try {
-                    const response = await fetch(`/suggestions?dataset=${datasetSelect.value}&num_suggestions=8`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        
-                        if (data.suggestions && data.suggestions.length > 0) {
-                            showQuerySuggestions(data.suggestions);
-                        }
+            // Only show suggestions if the service is enabled
+            if (!suggestionsCheckbox || !suggestionsCheckbox.checked) {
+                suggestionsPanel.style.display = 'none';
+                return;
+            }
+            
+            // Show suggestions panel
+            suggestionsPanel.style.display = 'block';
+            
+            // Get suggestion method
+            const suggestionMethod = document.getElementById('suggestion_method').value;
+            const suggestionCount = document.querySelector('input[name="suggestion_count"]').value;
+            
+            // Update method display
+            document.getElementById('suggestions-method').textContent = suggestionMethod.charAt(0).toUpperCase() + suggestionMethod.slice(1);
+            
+            // Show loading
+            document.getElementById('suggestions-loading').style.display = 'block';
+            document.getElementById('suggestions-container').innerHTML = '';
+            
+            try {
+                const response = await fetch('/suggestions', {
+                method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                body: JSON.stringify({
+                        dataset: datasetSelect.value,
+                        method: suggestionMethod,
+                        top_k: parseInt(suggestionCount),
+                        include_metadata: true
+                })
+            });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        showSmartSuggestions(data.suggestions);
+            } else {
+                        showNoSuggestions();
                     }
-                } catch (error) {
-                    console.log('No suggestions available:', error);
+                } else {
+                    showNoSuggestions();
+                }
+            } catch (error) {
+                console.log('Error loading suggestions:', error);
+                showNoSuggestions();
+            } finally {
+                document.getElementById('suggestions-loading').style.display = 'none';
+            }
+        }
+
+        function showSmartSuggestions(suggestions) {
+            const container = document.getElementById('suggestions-container');
+            container.innerHTML = '';
+            
+            suggestions.forEach(suggestion => {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.className = 'suggestion-item';
+                suggestionItem.onclick = () => selectSuggestion(suggestion.query);
+                
+                const textDiv = document.createElement('div');
+                textDiv.className = 'suggestion-text';
+                textDiv.textContent = suggestion.query;
+                
+                const scoreDiv = document.createElement('div');
+                scoreDiv.className = 'suggestion-score';
+                scoreDiv.textContent = suggestion.score ? suggestion.score.toFixed(3) : 'N/A';
+                
+                const typeDiv = document.createElement('div');
+                typeDiv.className = 'suggestion-type';
+                typeDiv.textContent = suggestion.type || 'suggestion';
+                
+                suggestionItem.appendChild(textDiv);
+                suggestionItem.appendChild(scoreDiv);
+                suggestionItem.appendChild(typeDiv);
+                
+                container.appendChild(suggestionItem);
+            });
+        }
+
+        function showNoSuggestions() {
+            const container = document.getElementById('suggestions-container');
+            container.innerHTML = '<div class="no-suggestions">No suggestions available</div>';
+        }
+
+        function selectSuggestion(query) {
+            document.getElementById('query').value = query;
+            
+            // Highlight the selected suggestion briefly
+            const suggestions = document.querySelectorAll('.suggestion-item');
+            suggestions.forEach(item => {
+                if (item.querySelector('.suggestion-text').textContent === query) {
+                    item.style.background = '#27ae60';
+                    item.style.color = 'white';
+                    setTimeout(() => {
+                        item.style.background = '';
+                        item.style.color = '';
+                    }, 500);
+                }
+            });
+        }
+
+        // Enhanced service toggle with suggestions
+        function toggleServiceConfig(configId, isChecked) {
+            const config = document.getElementById(configId);
+            if (isChecked) {
+                config.classList.add('active');
+                // If it's the suggestions service, load suggestions
+                if (configId === 'suggestion-config') {
+                    setTimeout(loadQuerySuggestions, 100);
+                }
+            } else {
+                config.classList.remove('active');
+                // If it's the suggestions service, hide suggestions
+                if (configId === 'suggestion-config') {
+                    document.getElementById('smart-suggestions-panel').style.display = 'none';
                 }
             }
         }
 
-        function showQuerySuggestions(suggestions) {
-            const queryInput = document.getElementById('query');
-            const suggestionSelect = document.createElement('select');
-            suggestionSelect.id = 'query-suggestions';
-            suggestionSelect.className = 'form-control';
-            suggestionSelect.style.marginBottom = '10px';
-            suggestionSelect.innerHTML = '<option value="">💡 Select a suggested query...</option>';
+        // Auto-load suggestions when method changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const suggestionMethod = document.getElementById('suggestion_method');
+            if (suggestionMethod) {
+                suggestionMethod.addEventListener('change', function() {
+                    const suggestionsCheckbox = document.querySelector('input[name="enable_query_suggestion"]');
+                    if (suggestionsCheckbox && suggestionsCheckbox.checked) {
+                        loadQuerySuggestions();
+                    }
+                });
+            }
             
-            suggestions.forEach(suggestion => {
-                const option = document.createElement('option');
-                option.value = suggestion.query || suggestion;
-                option.textContent = suggestion.query || suggestion;
-                suggestionSelect.appendChild(option);
-            });
-            
-            suggestionSelect.addEventListener('change', function() {
-                if (this.value) {
-                    queryInput.value = this.value;
-                    this.remove(); // Remove suggestions after selection
-                }
-            });
-            
-            queryInput.parentNode.insertBefore(suggestionSelect, queryInput);
-        }
+            // Auto-load suggestions when count changes
+            const suggestionCount = document.querySelector('input[name="suggestion_count"]');
+            if (suggestionCount) {
+                suggestionCount.addEventListener('change', function() {
+                    const suggestionsCheckbox = document.querySelector('input[name="enable_query_suggestion"]');
+                    if (suggestionsCheckbox && suggestionsCheckbox.checked) {
+                        loadQuerySuggestions();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>

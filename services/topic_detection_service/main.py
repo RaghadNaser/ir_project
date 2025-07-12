@@ -86,6 +86,8 @@ def load_topic_models():
             Path("models/keybert_argsme_topics_enhanced.joblib"),
             Path("services/topic_detection_service/models/keybert_argsme_topics_enhanced.joblib"),
             Path("../../models/keybert_argsme_topics_enhanced.joblib"),
+            Path(__file__).parent / "models" / "keybert_argsme_topics_enhanced.joblib",
+            Path.cwd() / "services" / "topic_detection_service" / "models" / "keybert_argsme_topics_enhanced.joblib",
         ]
         
         argsme_model_path = None
@@ -100,6 +102,9 @@ def load_topic_models():
             logger.info(f"ARGSME model loaded with {len(argsme_model.get('global_topics', []))} global topics")
         else:
             logger.warning("ARGSME topic model not found")
+            logger.warning(f"Searched paths: {[str(p) for p in argsme_paths]}")
+            logger.warning(f"Current working directory: {Path.cwd()}")
+            logger.warning(f"File location: {Path(__file__).parent}")
             
     except Exception as e:
         logger.error(f"Failed to load ARGSME topic model: {e}")
@@ -110,6 +115,8 @@ def load_topic_models():
             Path("models/keybert_wikir_topics_enhanced.joblib"),
             Path("services/topic_detection_service/models/keybert_wikir_topics_enhanced.joblib"),
             Path("../../models/keybert_wikir_topics_enhanced.joblib"),
+            Path(__file__).parent / "models" / "keybert_wikir_topics_enhanced.joblib",
+            Path.cwd() / "services" / "topic_detection_service" / "models" / "keybert_wikir_topics_enhanced.joblib",
         ]
         
         wikir_model_path = None
@@ -124,6 +131,9 @@ def load_topic_models():
             logger.info(f"WikiIR model loaded with {len(wikir_model.get('global_topics', []))} global topics")
         else:
             logger.warning("WikiIR topic model not found")
+            logger.warning(f"Searched paths: {[str(p) for p in wikir_paths]}")
+            logger.warning(f"Current working directory: {Path.cwd()}")
+            logger.warning(f"File location: {Path(__file__).parent}")
             
     except Exception as e:
         logger.error(f"Failed to load WikiIR topic model: {e}")
@@ -477,7 +487,14 @@ async def suggest_topics(
     try:
         topic_model = get_model(dataset)
         if not topic_model:
-            raise HTTPException(status_code=500, detail=f"{dataset.upper()} topic model not loaded")
+            logger.error(f"{dataset.upper()} topic model not loaded")
+            # Return empty response instead of raising exception
+            return TopicSuggestionResponse(
+                dataset=dataset,
+                suggestions=[],
+                related_topics=[],
+                topic_categories=[]
+            )
         
         global_topics = topic_model.get('global_topics', [])
         
@@ -515,7 +532,13 @@ async def suggest_topics(
         
     except Exception as e:
         logger.error(f"Error in suggest_topics: {e}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        # Return empty response instead of raising exception
+        return TopicSuggestionResponse(
+            dataset=dataset,
+            suggestions=[],
+            related_topics=[],
+            topic_categories=[]
+        )
 
 @app.get("/health")
 async def health_check():
@@ -535,11 +558,25 @@ async def health_check():
 @app.get("/model-info")
 async def get_model_info(dataset: str = Query("argsme", description="Dataset to get info for: 'argsme' or 'wikir'")):
     """Get information about the loaded model"""
-    topic_model = get_model(dataset)
-    if not topic_model:
-        raise HTTPException(status_code=500, detail=f"{dataset.upper()} topic model not loaded")
-    
     try:
+        topic_model = get_model(dataset)
+        if not topic_model:
+            logger.error(f"{dataset.upper()} topic model not loaded")
+            # Return basic info when model is not loaded
+            return {
+                "dataset": dataset,
+                "total_documents": 0,
+                "total_keywords": 0,
+                "unique_keywords": 0,
+                "global_topics_count": 0,
+                "processing_time": 0,
+                "dataset_type": "unknown",
+                "used_existing_tfidf": False,
+                "clustering_skipped": False,
+                "top_topics_preview": [],
+                "status": "model_not_loaded"
+            }
+        
         info = {
             "dataset": dataset,
             "total_documents": topic_model.get('total_documents', 0),
@@ -549,7 +586,8 @@ async def get_model_info(dataset: str = Query("argsme", description="Dataset to 
             "processing_time": topic_model.get('processing_time_seconds', 0),
             "dataset_type": topic_model.get('performance_metrics', {}).get('dataset_type', 'unknown'),
             "used_existing_tfidf": topic_model.get('performance_metrics', {}).get('used_existing_tfidf', False),
-            "clustering_skipped": topic_model.get('performance_metrics', {}).get('clustering_skipped', False)
+            "clustering_skipped": topic_model.get('performance_metrics', {}).get('clustering_skipped', False),
+            "status": "loaded"
         }
         
         # Add top topics preview
@@ -568,7 +606,21 @@ async def get_model_info(dataset: str = Query("argsme", description="Dataset to 
         
     except Exception as e:
         logger.error(f"Error getting model info: {e}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving model info: {str(e)}")
+        # Return basic info on error
+        return {
+            "dataset": dataset,
+            "total_documents": 0,
+            "total_keywords": 0,
+            "unique_keywords": 0,
+            "global_topics_count": 0,
+            "processing_time": 0,
+            "dataset_type": "unknown",
+            "used_existing_tfidf": False,
+            "clustering_skipped": False,
+            "top_topics_preview": [],
+            "status": "error",
+            "error": str(e)
+        }
 
 @app.get("/datasets")
 async def get_datasets():
@@ -637,7 +689,17 @@ async def get_topics(dataset: str = Query("argsme", description="Dataset to use:
     try:
         topic_model = get_model(dataset)
         if not topic_model:
-            raise HTTPException(status_code=500, detail=f"{dataset.upper()} topic model not loaded")
+            logger.error(f"{dataset.upper()} topic model not loaded")
+            return {
+                "dataset": dataset,
+                "topics": [],
+                "total_topics": 0,
+                "model_info": {
+                    "total_documents": 0,
+                    "unique_keywords": 0
+                },
+                "status": "model_not_loaded"
+            }
         
         global_topics = topic_model.get('global_topics', [])
         
@@ -660,12 +722,23 @@ async def get_topics(dataset: str = Query("argsme", description="Dataset to use:
             "model_info": {
                 "total_documents": topic_model.get('total_documents', 0),
                 "unique_keywords": topic_model.get('unique_keywords', 0)
-            }
+            },
+            "status": "loaded"
         }
         
     except Exception as e:
         logger.error(f"Error in get_topics: {e}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        return {
+            "dataset": dataset,
+            "topics": [],
+            "total_topics": 0,
+            "model_info": {
+                "total_documents": 0,
+                "unique_keywords": 0
+            },
+            "status": "error",
+            "error": str(e)
+        }
 
 if __name__ == "__main__":
     import uvicorn

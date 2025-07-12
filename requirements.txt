@@ -10,6 +10,9 @@ rank-bm25
 h5py
 matplotlib
 
+# AI and Machine Learning libraries
+accelerate  # For model optimization
+
 # GPU acceleration libraries
 cupy-cuda12x  # For CUDA 12.x (adjust version based on your CUDA version)
 faiss-gpu  # GPU version of FAISS
@@ -32,3 +35,15 @@ httpx
 
 # Memory optimization
 psutil  # For memory monitoring
+
+# Agent Service dependencies
+websockets  # For WebSocket support in agent
+asyncio  # For async operations
+
+# Additional dependencies for complete system
+requests  # For HTTP requests
+aiohttp  # For async HTTP requests
+python-multipart  # For file uploads
+jinja2  # For HTML templates
+python-dotenv  # For environment variables
+pydantic  # For data validation

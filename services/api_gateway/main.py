@@ -40,7 +40,8 @@ SERVICE_URLS = {
     "embedding": "http://localhost:8004",
     "hybrid": "http://localhost:8005",
     "topic_detection": "http://localhost:8006",
-    "query_suggestions": "http://localhost:8010"
+    "query_suggestions": "http://localhost:8010",
+    "agent": "http://localhost:8011"
 }
 
 # Search service map
@@ -77,7 +78,7 @@ class ServiceManager:
     """Service manager for handling service communications"""
     
     def __init__(self):
-        self.client = httpx.AsyncClient(timeout=30.0)
+        self.client = httpx.AsyncClient(timeout=60.0)  # Increased timeout for agent service
         self.service_status = {}
     
     async def check_service_health(self, service_name: str) -> bool:
@@ -161,6 +162,22 @@ def home(request: Request):
         "datasets": DATASETS,
         "representations": REPRESENTATIONS,
         "hybrid_methods": HYBRID_METHODS
+    })
+
+@app.get("/agent", response_class=HTMLResponse)
+def agent_page(request: Request):
+    """Agent conversational interface"""
+    return templates.TemplateResponse("agent.html", {
+        "request": request,
+        "datasets": DATASETS
+    })
+
+@app.get("/chat", response_class=HTMLResponse)
+def chat_page(request: Request):
+    """Chat interface for agent service"""
+    return templates.TemplateResponse("chat.html", {
+        "request": request,
+        "datasets": DATASETS
     })
 
 @app.post("/search")
@@ -263,7 +280,7 @@ async def enhance_search_results(results: Dict, query: str, dataset: str) -> lis
     return enhanced_results
 
 @app.post("/", response_class=HTMLResponse)
-def search_form(
+async def search_form(
     request: Request,
     dataset: str = Form(...),
     representation: str = Form(...),
@@ -336,12 +353,15 @@ def search_form(
                 "max_topics": int(topic_max_topics) if topic_max_topics else 5,
                 "min_relevance_score": float(topic_min_score) if topic_min_score else 0.1
             }
-            topic_response = requests.post(f"http://localhost:8006/detect-topics", json=topic_data, timeout=10)
-            if topic_response.status_code == 200:
-                topic_result = topic_response.json()
-                topics = topic_result.get("detected_topics", [])
+            topic_result = await service_manager.call_service(
+                "topic_detection", "detect-topics",
+                method="POST",
+                data=topic_data
+            )
+            topics = topic_result.get("detected_topics", [])
         except Exception as e:
             print(f"Topic detection error: {e}")
+            topics = []
     
     if enable_query_suggestion:
         try:
@@ -351,12 +371,15 @@ def search_form(
                 "method": suggestion_method or "hybrid",
                 "top_k": int(suggestion_count) if suggestion_count else 8
             }
-            suggestion_response = requests.post(f"http://localhost:8010/suggest", json=suggestion_data, timeout=10)
-            if suggestion_response.status_code == 200:
-                suggestion_result = suggestion_response.json()
-                suggestions = suggestion_result.get("suggestions", [])
+            suggestion_result = await service_manager.call_service(
+                "query_suggestions", "suggest",
+                method="POST",
+                data=suggestion_data
+            )
+            suggestions = suggestion_result.get("suggestions", [])
         except Exception as e:
             print(f"Query suggestion error: {e}")
+            suggestions = []
     
     if enable_vector_store:
         try:
@@ -373,7 +396,7 @@ def search_form(
                 vector_results = vector_result.get("results", [])
         except Exception as e:
             print(f"Vector store error: {e}")
-
+    
     return templates.TemplateResponse("index.html", {
         "request": request,
         "datasets": DATASETS,
@@ -386,6 +409,9 @@ def search_form(
         "representation": representation,
         "method": method,
         "top_k": top_k,
+        "first_stage_k": first_stage_k,
+        "tfidf_weight": tfidf_weight,
+        "embedding_weight": embedding_weight,
         "execution_time": execution_time,
         "performance_stats": performance_stats,
         "search_keywords": search_keywords,
@@ -440,6 +466,44 @@ async def get_query_suggestions(dataset: str = "argsme", num_suggestions: int = 
         suggestions = default_suggestions.get(dataset, ["data", "information"])
         return {"suggestions": [{"query": s} for s in suggestions[:num_suggestions]]}
 
+@app.post("/suggestions")
+async def post_smart_suggestions(request: Request):
+    """POST endpoint for smart suggestions with JSON data"""
+    try:
+        data = await request.json()
+        query = data.get("query", "")
+        dataset = data.get("dataset", "argsme")
+        method = data.get("method", "hybrid")
+        top_k = data.get("top_k", 8)
+        include_metadata = data.get("include_metadata", True)
+        
+        # Call the query suggestions service
+        suggestions = await service_manager.call_service(
+            "query_suggestions", "suggest",
+            method="POST",
+            data={
+                "query": query,
+                "dataset": dataset,
+                "method": method,
+                "top_k": top_k,
+                "include_metadata": include_metadata
+            }
+        )
+        
+        return suggestions
+        
+    except Exception as e:
+        print(f"Error getting smart suggestions: {e}")
+        # Return empty suggestions on error
+        return {
+            "suggestions": [],
+            "method": data.get("method", "hybrid"),
+            "dataset": data.get("dataset", "argsme"),
+            "query": data.get("query", ""),
+            "count": 0,
+            "error": str(e)
+        }
+
 @app.get("/topics/{dataset}")
 async def get_dataset_topics(dataset: str):
     """Get dataset topics"""
@@ -456,6 +520,141 @@ async def get_dataset_topics(dataset: str):
         print(f"Error getting topics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/topics/detect")
+async def detect_topics(request: Request):
+    """Detect topics in a query"""
+    try:
+        data = await request.json()
+        query = data.get("query", "")
+        dataset = data.get("dataset", "argsme")
+        max_topics = data.get("max_topics", 10)
+        min_relevance_score = data.get("min_relevance_score", 0.1)
+        
+        if not query:
+            raise HTTPException(status_code=400, detail="Query is required")
+        
+        result = await service_manager.call_service(
+            "topic_detection", "detect-topics",
+            method="POST",
+            data={
+                "query": query,
+                "dataset": dataset,
+                "max_topics": max_topics,
+                "min_relevance_score": min_relevance_score
+            }
+        )
+        
+        return {
+            "success": True,
+            "data": result,
+            "message": f"Detected {len(result.get('detected_topics', []))} topics"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to detect topics"
+        }
+
+@app.get("/topics/suggestions")
+async def get_topic_suggestions(
+    dataset: str = "argsme",
+    limit: int = 20,
+    category: Optional[str] = None
+):
+    """Get topic suggestions"""
+    try:
+        params = {"dataset": dataset, "limit": limit}
+        if category:
+            params["category"] = category
+            
+        result = await service_manager.call_service(
+            "topic_detection", "suggest-topics",
+            method="GET",
+            data=params
+        )
+        
+        return {
+            "success": True,
+            "data": result,
+            "message": f"Retrieved {len(result.get('suggestions', []))} topic suggestions"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to get topic suggestions"
+        }
+
+@app.get("/topics/model-info")
+async def get_topic_model_info(dataset: str = "argsme"):
+    """Get topic model information"""
+    try:
+        result = await service_manager.call_service(
+            "topic_detection", "model-info",
+            method="GET",
+            data={"dataset": dataset}
+        )
+        
+        return {
+            "success": True,
+            "data": result,
+            "message": f"Model info retrieved for {dataset} dataset"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to get model info"
+        }
+
+@app.get("/topics/datasets")
+async def get_topic_datasets():
+    """Get available datasets for topic detection"""
+    try:
+        result = await service_manager.call_service(
+            "topic_detection", "datasets",
+            method="GET"
+        )
+        
+        return {
+            "success": True,
+            "data": result,
+            "message": "Datasets information retrieved"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to get datasets info"
+        }
+
+@app.get("/topics/health")
+async def get_topic_service_health():
+    """Get topic detection service health"""
+    try:
+        result = await service_manager.call_service(
+            "topic_detection", "health",
+            method="GET"
+        )
+        
+        return {
+            "success": True,
+            "data": result,
+            "message": "Topic detection service health check completed"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to check topic detection service health"
+        }
+
 @app.get("/statistics")
 async def get_system_statistics():
     """Get system statistics"""
@@ -463,7 +662,7 @@ async def get_system_statistics():
         stats = {}
         
         # Get statistics from each service
-        for service_name in ["tfidf", "embedding", "hybrid", "topic_detection"]:
+        for service_name in ["tfidf", "embedding", "hybrid", "topic_detection", "agent"]:
             try:
                 service_stats = await service_manager.call_service(
                     service_name, "stats"
@@ -477,6 +676,65 @@ async def get_system_statistics():
     
     except Exception as e:
         print(f"Error getting statistics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/agent/chat")
+async def agent_chat(request: Request):
+    """Proxy endpoint for agent chat"""
+    try:
+        body = await request.json()
+        print(f"Agent chat request: {body}")
+        
+        # Create a client with longer timeout specifically for agent service
+        async with httpx.AsyncClient(timeout=120.0) as client:  # 2 minutes timeout
+            service_url = SERVICE_URLS.get("agent")
+            if not service_url:
+                raise HTTPException(status_code=404, detail="Agent service not found")
+            
+            url = f"{service_url}/chat"
+            print(f"Calling agent service at: {url}")
+            
+            response = await client.post(url, json=body)
+            print(f"Agent service response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                print(f"Agent service response: {result}")
+                return result
+            else:
+                print(f"Agent service error: {response.text}")
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Agent service error: {response.text}"
+                )
+        
+    except httpx.TimeoutException:
+        print("Agent service timeout")
+        raise HTTPException(status_code=504, detail="Agent service timeout - request took too long")
+    except Exception as e:
+        print(f"Agent chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/agent/sessions")
+async def get_agent_sessions():
+    """Get active agent sessions"""
+    try:
+        return await service_manager.call_service(
+            "agent", "sessions",
+            method="GET"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/agent/sessions/{session_id}")
+async def delete_agent_session(session_id: str):
+    """Delete agent session"""
+    try:
+        return await service_manager.call_service(
+            "agent", f"sessions/{session_id}",
+            method="DELETE"
+        )
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/suggest_api")
@@ -527,7 +785,6 @@ def view_document(request: Request, doc_id: str, dataset: str = "argsme"):
                     "acquisition": row[5] if row[5] else "Unknown Date",
                     "text": f"{row[1] if row[1] else ''} {row[2] if row[2] else ''}".strip(),
                     "title": f"Argument {doc_id}",
-                    "stance": "Unknown"  # Not available in this schema
                 }
             else:
                 document = None

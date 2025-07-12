@@ -33,7 +33,6 @@ from datetime import datetime, timedelta
 import pickle
 import threading
 from sentence_transformers import SentenceTransformer
-from rapidfuzz import process as rapidfuzz_process, fuzz as rapidfuzz_fuzz
 import faiss
 
 nltk.download('wordnet', quiet=True)
@@ -421,31 +420,54 @@ class SmartQuerySuggestionService:
         return expansion_suggestions[:top_k]
     
     def get_correction_suggestions(self, query: str, dataset: str, top_k: int, user_id: Optional[str] = None) -> List[Dict]:
-        """Get spell correction suggestions"""
+        """Get spell correction suggestions (احترافي)"""
         queries = self.load_queries(dataset, user_id)
         if not queries:
             queries = self.load_queries(dataset)
         if not queries:
             return []
-        
-        # Search for similar queries for correction
         all_titles = [q['title'] for q in queries]
-        close_matches = get_close_matches(query, all_titles, n=top_k, cutoff=0.6)
-        
-        correction_suggestions = []
-        for match in close_matches:
-            correction_suggestions.append({
-                'query': match,
-                'score': 0.9,
+        # تصحيح تلقائي للكلمات (عربي/إنجليزي)
+        words = query.split()
+        corrected_words = []
+        for word in words:
+            if re.match(r'^[\u0600-\u06FF]+$', word) and self.spell_ar:
+                # كلمة عربية
+                corr = self.spell_ar.correction(word)
+                corrected_words.append(corr if corr else word)
+            else:
+                # كلمة إنجليزية أو غير ذلك
+                corr = self.spell_en.correction(word)
+                corrected_words.append(corr if corr else word)
+        corrected_query = ' '.join(corrected_words)
+        suggestions = []
+        if corrected_query != query:
+            suggestions.append({
+                'query': corrected_query,
+                'score': 1.0,
                 'type': 'correction',
                 'metadata': {
                     'original_query': query,
-                    'correction_type': 'spell_check',
-                    'similarity': 0.9
+                    'correction_type': 'spellchecker',
+                    'lang': 'ar' if self.spell_ar else 'en'
                 }
             })
-        
-        return correction_suggestions
+        # إضافة الاقتراحات التقليدية (تشابه نصي)
+        from difflib import get_close_matches
+        close_matches = get_close_matches(query, all_titles, n=top_k, cutoff=0.6)
+        for match in close_matches:
+            if match != corrected_query:
+                suggestions.append({
+                    'query': match,
+                    'score': 0.9,
+                    'type': 'correction',
+                    'metadata': {
+                        'original_query': query,
+                        'correction_type': 'close_match',
+                        'similarity': 0.9
+                    }
+                })
+        return suggestions[:top_k]
     
     def get_category_suggestions(self, query: str, dataset: str, top_k: int, user_id: Optional[str] = None) -> List[Dict]:
         """Get category-based suggestions"""
@@ -612,6 +634,8 @@ class SmartQuerySuggestionService:
                     results.append(s)
         return results[:top_k]
 
+
+
 # Create service instance
 suggestion_service = SmartQuerySuggestionService()
 
@@ -626,7 +650,6 @@ def health_check():
 
 @app.post("/suggest")
 def suggest(req: SuggestionRequest):
-    """Main suggestion endpoint"""
     save_user_query(req.query, req.dataset)
     suggestions = []
     

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Chat - IR System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .nav-links {
+            margin-top: 15px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .chat-container {
+            flex: 1;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+
+        .session-info {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 500px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: #3498db;
+            color: white;
+        }
+
+        .message.agent .message-avatar {
+            background: #27ae60;
+            color: white;
+        }
+
+        .message-content {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #3498db;
+            color: white;
+        }
+
+        .message.agent .message-content {
+            background: white;
+            color: #2c3e50;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message.user .message-time {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-group textarea {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+            font-family: inherit;
+        }
+
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .send-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .send-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .send-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e9ecef;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+            margin-bottom: 20px;
+        }
+
+        .document-content {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .document-content h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .document-content p {
+            color: #495057;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .document-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .document-link:hover {
+            text-decoration: underline;
+        }
+
+        .topics-section, .suggestions-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .topics-section h4, .suggestions-section h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .topic-item, .suggestion-item {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 8px 12px;
+            border-radius: 15px;
+            margin: 5px;
+            display: inline-block;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .topic-item:hover, .suggestion-item:hover {
+            background: #1976d2;
+            color: white;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #27ae60;
+        }
+
+        .status-offline {
+            background: #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .send-btn {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-robot"></i> AI Agent Chat</h1>
+        <p>Advanced conversational search with document content extraction</p>
+        <div class="nav-links">
+            <a href="/"><i class="fas fa-search"></i> Search</a>
+            <a href="/simple"><i class="fas fa-list"></i> Simple Search</a>
+            <a href="/chat"><i class="fas fa-comments"></i> Chat</a>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2><i class="fas fa-robot"></i> AI Assistant</h2>
+            <div class="session-info">
+                <span class="status-indicator status-online"></span>
+                Session: <span id="session-id">Initializing...</span>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <div class="message agent">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <p>مرحباً! أنا مساعد الذكاء الاصطناعي المتقدم. يمكنني مساعدتك في البحث عن المستندات واستخراج المحتوى منها. كيف يمكنني مساعدتك اليوم؟</p>
+                    <div class="message-time" id="welcome-time"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input">
+            <div class="input-group">
+                <textarea 
+                    id="message-input" 
+                    placeholder="اكتب رسالتك هنا... (يمكنك الكتابة بالعربية أو الإنجليزية)"
+                    rows="2"
+                ></textarea>
+                <button id="send-btn" class="send-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AgentChat {
+            constructor() {
+                this.sessionId = null;
+                this.isLoading = false;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.generateSessionId();
+                this.updateWelcomeTime();
+            }
+
+            setupEventListeners() {
+                const messageInput = document.getElementById('message-input');
+                const sendBtn = document.getElementById('send-btn');
+
+                // Send message on Enter (but allow Shift+Enter for new line)
+                messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Send message on button click
+                sendBtn.addEventListener('click', () => {
+                    this.sendMessage();
+                });
+
+                // Auto-resize textarea
+                messageInput.addEventListener('input', () => {
+                    messageInput.style.height = 'auto';
+                    messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+                });
+            }
+
+            generateSessionId() {
+                this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                document.getElementById('session-id').textContent = this.sessionId;
+            }
+
+            updateWelcomeTime() {
+                const now = new Date();
+                document.getElementById('welcome-time').textContent = now.toLocaleTimeString();
+            }
+
+            async sendMessage() {
+                const messageInput = document.getElementById('message-input');
+                const message = messageInput.value.trim();
+
+                if (!message || this.isLoading) return;
+
+                // Add user message to chat
+                this.addMessage(message, 'user');
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+
+                // Show loading
+                this.showLoading();
+
+                try {
+                    const response = await fetch('/agent/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            session_id: this.sessionId,
+                            dataset: 'argsme',
+                            max_results: 5,
+                            include_topics: true,
+                            include_suggestions: true
+                        }),
+                        signal: AbortSignal.timeout(120000) // 2 minutes timeout
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    this.handleAgentResponse(data);
+
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    this.addErrorMessage('عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            addMessage(content, sender) {
+                const messagesContainer = document.getElementById('chat-messages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.innerHTML = sender === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+
+                // Parse and format the message content
+                const formattedContent = this.formatMessageContent(content, sender);
+                messageContent.innerHTML = formattedContent;
+
+                const messageTime = document.createElement('div');
+                messageTime.className = 'message-time';
+                messageTime.textContent = new Date().toLocaleTimeString();
+
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(messageContent);
+                messageContent.appendChild(messageTime);
+
+                messagesContainer.appendChild(messageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            formatMessageContent(content, sender) {
+                if (sender === 'user') {
+                    return `<p>${this.escapeHtml(content)}</p>`;
+                }
+
+                // For agent messages, parse and format the content
+                let formattedContent = content;
+
+                // Extract document content sections
+                const documentContentRegex = /(?:Extracted Content|Key Content|Relevant Content|Conclusion|Premises):\s*([^]*?)(?=\n\n|\n[A-Z]|$)/g;
+                formattedContent = formattedContent.replace(documentContentRegex, (match, content) => {
+                    return `<div class="document-content">
+                        <h4>${match.split(':')[0]}:</h4>
+                        <p>${this.escapeHtml(content.trim())}</p>
+                    </div>`;
+                });
+
+                // Extract document links
+                const linkRegex = /Document ID: ([^\n]+)/g;
+                formattedContent = formattedContent.replace(linkRegex, (match, docId) => {
+                    return `<a href="/document/argsme/${docId.trim()}" class="document-link" target="_blank">${match}</a>`;
+                });
+
+                // Convert line breaks to paragraphs
+                formattedContent = formattedContent.replace(/\n\n/g, '</p><p>');
+                formattedContent = formattedContent.replace(/\n/g, '<br>');
+
+                return `<p>${formattedContent}</p>`;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            handleAgentResponse(data) {
+                // Add agent response
+                this.addMessage(data.response, 'agent');
+
+                // Add topics if available
+                if (data.topics && data.topics.length > 0) {
+                    this.addTopics(data.topics);
+                }
+
+                // Add suggestions if available
+                if (data.suggestions && data.suggestions.length > 0) {
+                    this.addSuggestions(data.suggestions);
+                }
+            }
+
+            addTopics(topics) {
+                const messagesContainer = document.getElementById('chat-messages');
+                const topicsDiv = document.createElement('div');
+                topicsDiv.className = 'message agent';
+                topicsDiv.innerHTML = `
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="topics-section">
+                            <h4><i class="fas fa-tags"></i> المواضيع المكتشفة:</h4>
+                            ${topics.map(topic => 
+                                `<span class="topic-item" onclick="chat.searchTopic('${topic.topic_name}')">${topic.topic_name}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+                messagesContainer.appendChild(topicsDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            addSuggestions(suggestions) {
+                const messagesContainer = document.getElementById('chat-messages');
+                const suggestionsDiv = document.createElement('div');
+                suggestionsDiv.className = 'message agent';
+                suggestionsDiv.innerHTML = `
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="suggestions-section">
+                            <h4><i class="fas fa-lightbulb"></i> اقتراحات للبحث:</h4>
+                            ${suggestions.map(suggestion => 
+                                `<span class="suggestion-item" onclick="chat.useSuggestion('${suggestion}')">${suggestion}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+                messagesContainer.appendChild(suggestionsDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            searchTopic(topic) {
+                document.getElementById('message-input').value = `ابحث عن ${topic}`;
+            }
+
+            useSuggestion(suggestion) {
+                document.getElementById('message-input').value = suggestion;
+            }
+
+            addErrorMessage(message) {
+                const messagesContainer = document.getElementById('chat-messages');
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'message agent';
+                errorDiv.innerHTML = `
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-triangle"></i> ${message}
+                        </div>
+                    </div>
+                `;
+                messagesContainer.appendChild(errorDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            showLoading() {
+                this.isLoading = true;
+                const sendBtn = document.getElementById('send-btn');
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<div class="loading"><div class="spinner"></div>جاري...</div>';
+            }
+
+            hideLoading() {
+                this.isLoading = false;
+                const sendBtn = document.getElementById('send-btn');
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            }
+        }
+
+        // Initialize chat when page loads
+        let chat;
+        document.addEventListener('DOMContentLoaded', () => {
+            chat = new AgentChat();
+        });
+    </script>
+</body>
+</html> 

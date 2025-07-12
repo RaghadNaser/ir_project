@@ -209,7 +209,7 @@
                             {% if key == 'doc_id' %}<i class="fa-solid fa-id-card icon"></i>{% endif %}
                             {% if key == 'text' %}<i class="fa-solid fa-file-text icon"></i>{% endif %}
                             {% if key == 'title' %}<i class="fa-solid fa-heading icon"></i>{% endif %}
-                            {% if key == 'stance' %}<i class="fa-solid fa-balance-scale icon"></i>{% endif %}
+                            <!-- {% if key == 'stance' %}<i class="fa-solid fa-balance-scale icon"></i>{% endif %} -->
                             {% if key == 'topic' %}<i class="fa-solid fa-tag icon"></i>{% endif %}
                             {% if key == 'argument_id' %}<i class="fa-solid fa-hashtag icon"></i>{% endif %}
                             {% if key == 'page_id' %}<i class="fa-solid fa-file icon"></i>{% endif %}
@@ -241,9 +241,7 @@
                 </button>
                 {% endif %}
                 
-                {% if document.text %}
-              
-                {% endif %}
+               
                 <button class="action-button secondary" onclick="shareDocument()">
                     <i class="fa-solid fa-share"></i> Share Document
                 </button>
