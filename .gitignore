@@ -189,8 +189,7 @@ services/topic_detection_service/models/*.joblib
 *.pickle
 
 # Large notebook files
-*.ipynb
-!*_small.ipynb
+
 
 # Image files
 *.png
