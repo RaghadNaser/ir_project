@@ -97,7 +97,7 @@ async def unified_search(request: UnifiedSearchRequest):
             embed_data = embed_response.json()
             embed_time = time.time() - embed_start
             
-            # Step 2: Search with vector store
+            # Step 2: Search with vector store (with score normalization)
             search_start = time.time()
             search_response = requests.post(
                 f"{VECTOR_STORE_SERVICE_URL}/search",
@@ -105,7 +105,8 @@ async def unified_search(request: UnifiedSearchRequest):
                     "dataset": request.dataset,
                     "query_vector": embed_data["embedding"],
                     "top_k": request.top_k,
-                    "index_type": request.index_type
+                    "index_type": request.index_type,
+                    "score_normalization": "minmax"  # Use minmax for stable [0,1] range
                 },
                 timeout=30
             )
