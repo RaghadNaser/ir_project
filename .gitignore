@@ -190,7 +190,6 @@ services/topic_detection_service/models/*.joblib
 
 # Large notebook files
 
-
 # Image files
 *.png
 *.jpg
