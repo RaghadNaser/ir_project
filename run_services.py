@@ -21,14 +21,14 @@ SERVICES = [
     {
         "name": "Preprocessing Service",
         "script": "services/preprocessing_service/main.py",
-        "port": 8002,
+        "port": 8003,
         "description": "Text preprocessing and normalization"
     },
     {
         "name": "TF-IDF Service",
-        "script": "services/tfidf_service/main.py",
-        "port": 8003,
-        "description": "TF-IDF search and indexing"
+        "script": "services/tfidf_service/main_simple.py",
+        "port": 8002,
+        "description": "Simplified TF-IDF search (avoids version compatibility issues)"
     },
     {
         "name": "Embedding Service",
@@ -140,11 +140,11 @@ def main():
         sys.exit(1)
     
     # Start services
-        processes = []
+    processes = []
 
     for service in SERVICES:
         process = start_service(service)
-            if process:
+        if process:
             processes.append((service["name"], process))
         time.sleep(1)  # Small delay between services
 
@@ -160,10 +160,10 @@ def main():
 
     print("\nPress Ctrl+C to stop all services")
     
-            try:
+    try:
         # Keep the script running
-                while True:
-                    time.sleep(1)
+        while True:
+            time.sleep(1)
             
             # Check if any process has died
             for name, process in processes[:]:
@@ -175,7 +175,7 @@ def main():
                 print("Error: All services have stopped")
                 break
                 
-            except KeyboardInterrupt:
+    except KeyboardInterrupt:
         print("\nStopping all services...")
         
         for name, process in processes:

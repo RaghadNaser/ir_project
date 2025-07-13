@@ -395,6 +395,113 @@
             border: 1px solid #dee2e6;
         }
         
+
+        
+        .documents-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+            border-left: 4px solid #28a745;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .documents-header {
+            font-weight: 600;
+            color: #28a745;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .documents-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .document-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .document-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .document-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .document-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #495057;
+            flex: 1;
+            margin-right: 15px;
+        }
+        
+        .document-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        .score-badge {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .source-badge {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .document-content {
+            color: #6c757d;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .document-content p {
+            margin: 5px 0;
+        }
+        
+        .dark-mode .documents-panel {
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+        }
+        
+        .dark-mode .document-item {
+            background: #34495e;
+            border-color: #34495e;
+            color: white;
+        }
+        
+        .dark-mode .document-title {
+            color: white;
+        }
+        
+        .dark-mode .document-content {
+            color: #bdc3c7;
+        }
+        
         .document-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
@@ -602,6 +709,39 @@
             </button>
             <h2><i class="fas fa-robot"></i> Professional AI Agent</h2>
             <p>Advanced conversational search with semantic understanding and long-term memory</p>
+            
+            <!-- Language and Search Method Controls -->
+            <div class="controls-container" style="margin-top: 15px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                <!-- Language Selection -->
+                <div class="control-group">
+                    <label style="color: white; font-size: 14px; margin-bottom: 5px; display: block;">Language:</label>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-light active" id="langAr" onclick="setLanguage('ar')">
+                            <i class="fas fa-language"></i> العربية
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-light" id="langEn" onclick="setLanguage('en')">
+                            <i class="fas fa-language"></i> English
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Search Method Selection -->
+                <div class="control-group">
+                    <label style="color: white; font-size: 14px; margin-bottom: 5px; display: block;">Search Method:</label>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-light active" id="methodHybrid" onclick="setSearchMethod('hybrid')">
+                            <i class="fas fa-brain"></i> Hybrid
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-light" id="methodTfidf" onclick="setSearchMethod('tfidf')">
+                            <i class="fas fa-search"></i> TF-IDF
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-light" id="methodEmbedding" onclick="setSearchMethod('embedding')">
+                            <i class="fas fa-project-diagram"></i> Embedding
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <div class="ai-status">
                 <div class="status-indicator"></div>
                 <span>AI Active</span>
@@ -678,7 +818,41 @@
         let totalConfidence = 0;
         let sessionStartTime = Date.now();
         let isDarkMode = false;
+        let currentLanguage = 'ar';  // Default language
+        let currentSearchMethod = 'hybrid';  // Default search method
 
+        // Language and Search Method Control Functions
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Update button states
+            document.getElementById('langAr').classList.remove('active');
+            document.getElementById('langEn').classList.remove('active');
+            document.getElementById('lang' + (lang === 'ar' ? 'Ar' : 'En')).classList.add('active');
+            
+            // Update placeholder text
+            const messageInput = document.getElementById('messageInput');
+            if (lang === 'ar') {
+                messageInput.placeholder = 'اسألني أي شيء... (أدعم العربية والإنجليزية)';
+            } else {
+                messageInput.placeholder = 'Ask me anything... (I support Arabic and English)';
+            }
+            
+            console.log('Language set to:', lang);
+        }
+        
+        function setSearchMethod(method) {
+            currentSearchMethod = method;
+            
+            // Update button states
+            document.getElementById('methodHybrid').classList.remove('active');
+            document.getElementById('methodTfidf').classList.remove('active');
+            document.getElementById('methodEmbedding').classList.remove('active');
+            document.getElementById('method' + method.charAt(0).toUpperCase() + method.slice(1)).classList.add('active');
+            
+            console.log('Search method set to:', method);
+        }
+        
         // Initialize session
         async function initializeSession() {
             try {
@@ -726,6 +900,8 @@
                         session_id: sessionId,
                         dataset: 'argsme',
                         user_id: 'user_' + Date.now(),
+                        language: currentLanguage,
+                        search_method: currentSearchMethod,
                         include_topics: true,
                         include_suggestions: true
                     }),
@@ -746,8 +922,13 @@
                 // Hide typing indicator
                 hideTypingIndicator();
                 
-                // Add agent response
-                addAgentMessage(data);
+                            // Add agent response
+            addAgentMessage(data);
+            
+            // Add documents if available
+            if (data.documents && data.documents.length > 0) {
+                addDocumentsPanel(data.documents);
+            }
                 
                 // Update session stats
                 updateSessionStats(data);
@@ -942,12 +1123,61 @@
             window.open(url, '_blank');
         }
 
+        // Add documents panel
+        function addDocumentsPanel(documents) {
+            const chatMessages = document.getElementById('chatMessages');
+            const documentsDiv = document.createElement('div');
+            documentsDiv.className = 'documents-panel';
+            
+            let documentsHTML = `
+                <div class="documents-header">
+                    <i class="fas fa-file-alt"></i> Found Documents (${documents.length})
+                </div>
+                <div class="documents-list">
+            `;
+            
+            documents.forEach((doc, index) => {
+                const score = (doc.score * 100).toFixed(1);
+                const source = doc.source || 'unknown';
+                const title = doc.title || 'No Title';
+                const content = doc.content || 'No content available';
+                const topic = doc.topic || 'No topic';
+                
+                documentsHTML += `
+                    <div class="document-item">
+                        <div class="document-header">
+                            <h4 class="document-title">${title}</h4>
+                            <div class="document-meta">
+                                <span class="score-badge">Score: ${score}%</span>
+                                <span class="source-badge">${source.toUpperCase()}</span>
+                                <button class="document-btn" onclick="openDocument('${doc.id}')">
+                                    <i class="fas fa-external-link-alt"></i> View
+                                </button>
+                            </div>
+                        </div>
+                        <div class="document-content">
+                            <p><strong>Topic:</strong> ${topic}</p>
+                            <p>${content.substring(0, 200)}${content.length > 200 ? '...' : ''}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            documentsHTML += `
+                </div>
+            `;
+            
+            documentsDiv.innerHTML = documentsHTML;
+            chatMessages.appendChild(documentsDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
         // Function to handle document links
         function handleDocumentLink(url) {
             window.open(url, '_blank');
         }
 
-        // Send suggestion
+        // Send suggestion with current language and search method
         function sendSuggestion(suggestion) {
             document.getElementById('messageInput').value = suggestion;
             sendMessage();

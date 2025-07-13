@@ -19,6 +19,8 @@ from typing import List, Dict, Optional, Set
 from functools import lru_cache
 import os
 import random
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.exceptions import NotFittedError
 
 app = FastAPI(title="DTM-Optimized TF-IDF Service")
 
@@ -50,6 +52,7 @@ vectorizers = {}
 matrices = {}  # TF-IDF matrices (DTM)
 doc_mappings = {}
 vocabularies = {}  # Term to index mapping (like user's 'terms')
+fallback_vectorizers = {}  # Fallback vectorizers for unfitted models
 
 # Performance stats
 stats = {
@@ -78,6 +81,116 @@ def smart_tokenizer(text):
     tokens = text.split()
     tokens = [t for t in tokens if len(t) > 2 and not t.isdigit()]
     return tokens
+
+def compute_idf_from_matrix(tfidf_matrix: sparse.spmatrix, vocabulary: Dict[str, int]) -> np.ndarray:
+    """
+    Compute IDF values from the TF-IDF matrix
+    This is useful when the vectorizer is not properly fitted
+    """
+    # Count documents containing each term (more efficient approach)
+    # Get the number of non-zero elements per column
+    doc_counts = np.array(tfidf_matrix.getnnz(axis=0))
+    
+    # Compute IDF: log(N / df) where N is total documents, df is document frequency
+    N = tfidf_matrix.shape[0]
+    idf_values = np.log(N / (doc_counts + 1)) + 1  # Add 1 for smoothing
+    
+    return idf_values
+
+def create_fallback_vectorizer(vocabulary: Dict[str, int], tfidf_matrix: Optional[sparse.spmatrix] = None):
+    """
+    Create a fallback vectorizer that can transform queries without being fitted
+    This handles the case where the saved vectorizer is not properly fitted
+    """
+    # Create a custom vectorizer class that bypasses the fitting requirement
+    class FallbackTfidfVectorizer:
+        def __init__(self, vocabulary, idf_values, preprocessor, tokenizer):
+            self.vocabulary_ = vocabulary
+            self.idf_ = idf_values
+            self.preprocessor = preprocessor
+            self.tokenizer = tokenizer
+            
+        def transform(self, documents):
+            """Custom transform method that doesn't require fitting"""
+            from scipy.sparse import csr_matrix
+            import numpy as np
+            
+            # Process documents
+            processed_docs = []
+            for doc in documents:
+                processed = self.preprocessor(doc)
+                tokens = self.tokenizer(processed)
+                processed_docs.append(tokens)
+            
+            # Create TF-IDF matrix
+            rows, cols, data = [], [], []
+            
+            for doc_idx, tokens in enumerate(processed_docs):
+                # Count term frequencies
+                term_counts = {}
+                for token in tokens:
+                    if token in self.vocabulary_:
+                        term_idx = self.vocabulary_[token]
+                        term_counts[term_idx] = term_counts.get(term_idx, 0) + 1
+                
+                # Apply TF-IDF transformation
+                for term_idx, tf in term_counts.items():
+                    if term_idx < len(self.idf_):
+                        tfidf_score = tf * self.idf_[term_idx]
+                        rows.append(doc_idx)
+                        cols.append(term_idx)
+                        data.append(tfidf_score)
+            
+            # Create sparse matrix
+            if data:
+                matrix = csr_matrix((data, (rows, cols)), 
+                                  shape=(len(processed_docs), len(self.vocabulary_)))
+            else:
+                matrix = csr_matrix((len(processed_docs), len(self.vocabulary_)))
+            
+            return matrix
+    
+    # Compute IDF values from matrix if available
+    if tfidf_matrix is not None:
+        idf_values = compute_idf_from_matrix(tfidf_matrix, vocabulary)
+        print(f"📊 Computed IDF values from matrix (min: {idf_values.min():.3f}, max: {idf_values.max():.3f})")
+    else:
+        # Create dummy idf values (all 1.0) if not available
+        idf_values = np.ones(len(vocabulary))
+        print(f"⚠️ Using dummy IDF values (all 1.0) for {len(vocabulary)} terms")
+    
+    # Create and return the fallback vectorizer
+    return FallbackTfidfVectorizer(
+        vocabulary=vocabulary,
+        idf_values=idf_values,
+        preprocessor=smart_preprocessor,
+        tokenizer=smart_tokenizer
+    )
+
+def safe_transform_query(vectorizer, query_text: str, dataset: str):
+    """
+    Safely transform a query, with fallback if the vectorizer is not fitted
+    """
+    try:
+        return vectorizer.transform([query_text])
+    except NotFittedError as e:
+        print(f"⚠️ Vectorizer not fitted for {dataset}, using fallback approach")
+        
+        if dataset not in fallback_vectorizers:
+            # Create fallback vectorizer using the vocabulary and matrix
+            vocab = vectorizer.vocabulary_
+            tfidf_matrix = matrices.get(dataset)
+            if tfidf_matrix is not None:
+                fallback_vectorizers[dataset] = create_fallback_vectorizer(vocab, tfidf_matrix)
+            else:
+                fallback_vectorizers[dataset] = create_fallback_vectorizer(vocab)
+        
+        return fallback_vectorizers[dataset].transform([query_text])
+    except Exception as e:
+        print(f"❌ Error transforming query: {e}")
+        # Return empty sparse matrix as last resort
+        from scipy.sparse import csr_matrix
+        return csr_matrix((1, len(vectorizer.vocabulary_)))
 
 # Thread-safe database connection
 db_conn = None
@@ -205,6 +318,17 @@ def load_dataset_models(dataset: str):
         vectorizer = vectorizers[dataset]
         vocabularies[dataset] = vectorizer.vocabulary_  # This gives term -> index mapping
         
+        # Check if vectorizer is properly fitted
+        try:
+            # Test if the vectorizer can transform a simple query
+            test_query = "test query"
+            vectorizer.transform([test_query])
+            print(f"✅ Vectorizer for {dataset} is properly fitted")
+        except NotFittedError:
+            print(f"⚠️ Vectorizer for {dataset} is not fitted, creating fallback")
+            # Create fallback vectorizer with matrix for IDF computation
+            fallback_vectorizers[dataset] = create_fallback_vectorizer(vectorizer.vocabulary_, matrices[dataset])
+        
         # Create efficient bidirectional mapping
         if isinstance(doc_mapping_raw, dict) and "index_to_docid" in doc_mapping_raw:
             doc_mappings[dataset] = doc_mapping_raw
@@ -297,8 +421,8 @@ def search_dtm_optimized(req: SearchRequest):
                 candidates_checked=0, matched_terms=0
             )
         
-        # Vectorize query (like user's query_vector)
-        query_vector = vectorizers[req.dataset].transform([cleaned_query])
+        # Vectorize query (like user's query_vector) - using safe transform
+        query_vector = safe_transform_query(vectorizers[req.dataset], cleaned_query, req.dataset)
         query_terms = smart_tokenizer(cleaned_query)
         
         print(f"🔍 Query: '{req.query}' -> Terms: {query_terms}")

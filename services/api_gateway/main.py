@@ -78,7 +78,7 @@ class ServiceManager:
     """Service manager for handling service communications"""
     
     def __init__(self):
-        self.client = httpx.AsyncClient(timeout=60.0)  # Increased timeout for agent service
+        self.client = httpx.AsyncClient(timeout=90.0)  # Increased timeout for agent service
         self.service_status = {}
     
     async def check_service_health(self, service_name: str) -> bool:
@@ -396,7 +396,34 @@ async def search_form(
                 vector_results = vector_result.get("results", [])
         except Exception as e:
             print(f"Vector store error: {e}")
+            vector_results = []
+
+    # Debug: Print results structure
+    print(f"Results type: {type(results)}")
+    if results and len(results) > 0:
+        print(f"First result type: {type(results[0])}")
+        print(f"First result: {results[0]}")
     
+    # Ensure results is a list of dictionaries
+    if results and len(results) > 0 and not isinstance(results[0], dict):
+        print("Converting results to proper format")
+        # Convert list format to dict format if needed
+        formatted_results = []
+        for i, result in enumerate(results):
+            if isinstance(result, (list, tuple)) and len(result) >= 2:
+                formatted_results.append({
+                    "doc_id": result[0],
+                    "score": result[1],
+                    "rank": i + 1
+                })
+            else:
+                formatted_results.append({
+                    "doc_id": str(result),
+                    "score": 0.0,
+                    "rank": i + 1
+                })
+        results = formatted_results
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "datasets": DATASETS,
@@ -686,7 +713,7 @@ async def agent_chat(request: Request):
         print(f"Agent chat request: {body}")
         
         # Create a client with longer timeout specifically for agent service
-        async with httpx.AsyncClient(timeout=120.0) as client:  # 2 minutes timeout
+        async with httpx.AsyncClient(timeout=120.0) as client:  # 3 minutes timeout
             service_url = SERVICE_URLS.get("agent")
             if not service_url:
                 raise HTTPException(status_code=404, detail="Agent service not found")
