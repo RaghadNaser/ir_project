@@ -145,6 +145,29 @@
             font-size: 12px;
         }
 
+        .btn-action {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+        }
+
+        .btn-action:hover {
+            background: linear-gradient(135deg, #229954, #27ae60);
+            transform: translateY(-1px);
+        }
+
+        .btn-action:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .form-group {
             margin-bottom: 20px;
         }
@@ -307,6 +330,21 @@
             border-radius: 4px;
             font-size: 12px;
             font-weight: 600;
+        }
+
+        .result-preview {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 3px solid #3498db;
+        }
+
+        .result-preview p {
+            margin: 0;
+            color: #495057;
+            line-height: 1.5;
+            font-size: 14px;
         }
 
         .result-id {
@@ -662,6 +700,16 @@
             font-size: 10px;
             font-weight: 600;
             margin-left: 8px;
+        }
+
+        .suggestion-frequency {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 5px;
         }
 
         .suggestions-loading {
@@ -1244,11 +1292,18 @@
                                         <option value="semantic">Semantic</option>
                                         <option value="popular">Popular</option>
                                         <option value="autocomplete">Autocomplete</option>
+                                        <option value="semantic_terms">Semantic Terms</option>
+                                        <option value="hybrid_terms">Hybrid Terms</option>
                     </select>
                 </div>
                                 <div class="config-row">
                                     <label>Count:</label>
                                     <input type="number" name="suggestion_count" value="8" min="1" max="20">
+                                </div>
+                                <div class="config-row">
+                                    <label>Actions:</label>
+                                    <button type="button" onclick="extractDocumentTerms()" class="btn-action">Extract Terms</button>
+                                    <button type="button" onclick="buildTermEmbeddings()" class="btn-action">Build Embeddings</button>
                                 </div>
                             </div>
             </div>
@@ -1301,14 +1356,25 @@
                     <div class="result-item">
                         <!-- Result Header -->
                         <div class="result-header">
-                            <h3 class="result-title">Document #{{ loop.index }}</h3>
+                            <h3 class="result-title">
+                                {% if result.get('title') %}
+                                    {{ result.get('title') }}
+                                {% else %}
+                                    Document #{{ loop.index }}
+                                {% endif %}
+                            </h3>
                             <div>
                                 <span class="result-rank">Rank {{ result.get('rank', loop.index) }}</span>
                                 <span class="result-score">{{ "%.4f"|format(result.get('score', 0)) }}</span>
                             </div>
                         </div>
 
-                        <!-- Document ID -->
+                        <!-- Document Preview -->
+                        <div class="result-preview">
+                            <p>{{ result.get('preview_text', 'No preview available') }}</p>
+                        </div>
+
+                        <!-- Document ID (small) -->
                         <div class="result-id">
                             📄 <strong>ID:</strong> {{ result.get('doc_id', result.get('id', 'N/A')) }}
                         </div>
@@ -1862,6 +1928,88 @@
             }
         }
 
+        // Document terms and embeddings functionality
+        async function extractDocumentTerms() {
+            const datasetSelect = document.getElementById('dataset');
+            const extractBtn = document.querySelector('button[onclick="extractDocumentTerms()"]');
+            const buildBtn = document.querySelector('button[onclick="buildTermEmbeddings()"]');
+            
+            // Disable buttons during processing
+            extractBtn.disabled = true;
+            buildBtn.disabled = true;
+            extractBtn.textContent = 'Extracting...';
+            
+            try {
+                const response = await fetch('/suggestions/extract-terms', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        dataset: datasetSelect.value,
+                        top_k: 1000
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        alert(`Successfully extracted ${data.terms_count} terms from documents!`);
+                        buildBtn.disabled = false;
+                    } else {
+                        alert(`Error: ${data.error || 'Failed to extract terms'}`);
+                    }
+                } else {
+                    alert('Failed to extract terms from documents');
+                }
+            } catch (error) {
+                console.error('Error extracting terms:', error);
+                alert('Error extracting terms: ' + error.message);
+            } finally {
+                extractBtn.disabled = false;
+                extractBtn.textContent = 'Extract Terms';
+            }
+        }
+
+        async function buildTermEmbeddings() {
+            const datasetSelect = document.getElementById('dataset');
+            const buildBtn = document.querySelector('button[onclick="buildTermEmbeddings()"]');
+            
+            // Disable button during processing
+            buildBtn.disabled = true;
+            buildBtn.textContent = 'Building...';
+            
+            try {
+                const response = await fetch('/suggestions/build-embeddings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        dataset: datasetSelect.value,
+                        top_k: 1000
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        alert(`Successfully built embeddings for ${data.embeddings_count || 'terms'}!`);
+                    } else {
+                        alert(`Error: ${data.error || 'Failed to build embeddings'}`);
+                    }
+                } else {
+                    alert('Failed to build term embeddings');
+                }
+            } catch (error) {
+                console.error('Error building embeddings:', error);
+                alert('Error building embeddings: ' + error.message);
+            } finally {
+                buildBtn.disabled = false;
+                buildBtn.textContent = 'Build Embeddings';
+            }
+        }
+
         // Query suggestions functionality
         async function loadQuerySuggestions() {
             const queryInput = document.getElementById('query');
@@ -1941,7 +2089,22 @@
                 
                 const typeDiv = document.createElement('div');
                 typeDiv.className = 'suggestion-type';
-                typeDiv.textContent = suggestion.type || 'suggestion';
+                // Show more descriptive type for new methods
+                let typeText = suggestion.type || 'suggestion';
+                if (typeText === 'semantic_terms') typeText = '📚 Doc Term';
+                else if (typeText === 'hybrid_terms') typeText = '🔗 Hybrid Term';
+                else if (typeText === 'semantic') typeText = '🧠 Semantic';
+                else if (typeText === 'popular') typeText = '🔥 Popular';
+                else if (typeText === 'autocomplete') typeText = '⌨️ Auto';
+                typeDiv.textContent = typeText;
+                
+                // Add frequency info if available
+                if (suggestion.frequency) {
+                    const freqDiv = document.createElement('div');
+                    freqDiv.className = 'suggestion-frequency';
+                    freqDiv.textContent = `📊 ${suggestion.frequency}`;
+                    suggestionItem.appendChild(freqDiv);
+                }
                 
                 suggestionItem.appendChild(textDiv);
                 suggestionItem.appendChild(scoreDiv);

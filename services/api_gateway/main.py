@@ -258,7 +258,114 @@ async def enhance_search_results(results: Dict, query: str, dataset: str) -> lis
     """Enhance search results with additional information"""
     enhanced_results = []
     
+    # Connect to database to get document information
+    db_path = "data/ir_database_combined.db"
+    conn = None
+    cursor = None
+    
+    try:
+        if os.path.exists(db_path):
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            print(f"✅ Connected to database: {db_path}")
+            
+            # Check available tables
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = cursor.fetchall()
+            table_names = [table[0] for table in tables]
+            print(f"📋 Available tables: {table_names}")
+        else:
+            print(f"❌ Database file not found: {db_path}")
+    except Exception as e:
+        print(f"❌ Database connection error: {e}")
+    
     for result in results.get("results", []):
+        doc_id = result.get("doc_id", result.get("id", ""))
+        print(f"📄 Processing result with doc_id: {doc_id}")
+        
+        # Get document information from database
+        if cursor and doc_id:
+            print(f"🔍 Looking for document {doc_id} in {dataset} dataset")
+            try:
+                if dataset.lower() == "argsme":
+                    cursor.execute("""
+                        SELECT conclusion, premises_texts, source_title, topic
+                        FROM argsme_raw 
+                        WHERE doc_id = ?
+                    """, (doc_id,))
+                    row = cursor.fetchone()
+                    if row:
+                        conclusion = row[0] if row[0] else ""
+                        premises = row[1] if row[1] else ""
+                        source_title = row[3] if row[3] else ""
+                        topic = row[4] if row[4] else ""
+                        
+                        print(f"✅ Found ARGSME document: conclusion={len(conclusion)} chars, premises={len(premises)} chars")
+                        
+                        # Create title from source_title or conclusion
+                        if source_title:
+                            title = source_title
+                        elif conclusion:
+                            # Take first 100 characters of conclusion
+                            title = conclusion[:100] + "..." if len(conclusion) > 100 else conclusion
+                        else:
+                            title = f"Argument {doc_id}"
+                        
+                        # Create preview text
+                        preview_text = conclusion[:200] + "..." if len(conclusion) > 200 else conclusion
+                        if not preview_text and premises:
+                            preview_text = premises[:200] + "..." if len(premises) > 200 else premises
+                        
+                        result["title"] = title
+                        result["preview_text"] = preview_text
+                        result["source_title"] = source_title
+                        result["topic"] = topic
+                    else:
+                        print(f"❌ ARGSME document {doc_id} not found")
+                        result["title"] = f"Document {doc_id}"
+                        result["preview_text"] = "No preview available"
+                
+                elif dataset.lower() == "wikir":
+                    cursor.execute("""
+                        SELECT text 
+                        FROM wikir_docs 
+                        WHERE doc_id = ?
+                    """, (doc_id,))
+                    row = cursor.fetchone()
+                    if row:
+                        text = row[0] if row[0] else ""
+                        
+                        print(f"✅ Found WIKIR document: text={len(text)} chars")
+                        
+                        # Create title from first part of text
+                        if text:
+                            # Take first 100 characters as title
+                            title = text[:100] + "..." if len(text) > 100 else text
+                            # Take first 200 characters as preview
+                            preview_text = text[:200] + "..." if len(text) > 200 else text
+                        else:
+                            title = f"Page {doc_id}"
+                            preview_text = "No preview available"
+                        
+                        result["title"] = title
+                        result["preview_text"] = preview_text
+                    else:
+                        print(f"❌ WIKIR document {doc_id} not found")
+                        result["title"] = f"Page {doc_id}"
+                        result["preview_text"] = "No preview available"
+                
+                else:
+                    result["title"] = f"Document {doc_id}"
+                    result["preview_text"] = "No preview available"
+                    
+            except Exception as e:
+                print(f"Error getting document info for {doc_id}: {e}")
+                result["title"] = f"Document {doc_id}"
+                result["preview_text"] = "Error loading preview"
+        else:
+            result["title"] = f"Document {doc_id}"
+            result["preview_text"] = "No preview available"
+        
         # Add topic detection if available
         try:
             topic_info = await service_manager.call_service(
@@ -276,6 +383,10 @@ async def enhance_search_results(results: Dict, query: str, dataset: str) -> lis
             result["topics"] = []
         
         enhanced_results.append(result)
+    
+    # Close database connection
+    if conn:
+        conn.close()
     
     return enhanced_results
 
@@ -424,6 +535,16 @@ async def search_form(
                 })
         results = formatted_results
 
+    # Enhance results with document information (title, preview, etc.)
+    if results:
+        try:
+            enhanced_results = await enhance_search_results({"results": results}, query, dataset)
+            results = enhanced_results
+            print(f"Enhanced {len(results)} results with document information")
+        except Exception as e:
+            print(f"Error enhancing results: {e}")
+            # Continue with original results if enhancement fails
+
     return templates.TemplateResponse("index.html", {
         "request": request,
         "datasets": DATASETS,
@@ -492,6 +613,100 @@ async def get_query_suggestions(dataset: str = "argsme", num_suggestions: int = 
         }
         suggestions = default_suggestions.get(dataset, ["data", "information"])
         return {"suggestions": [{"query": s} for s in suggestions[:num_suggestions]]}
+
+@app.get("/suggestions/methods")
+async def get_suggestion_methods():
+    """Get available suggestion methods"""
+    try:
+        methods = await service_manager.call_service(
+            "query_suggestions", "methods",
+            method="GET"
+        )
+        return methods
+    except Exception as e:
+        print(f"Error getting suggestion methods: {e}")
+        return {
+            "methods": [
+                {
+                    "name": "hybrid",
+                    "description": "Hybrid: Semantic + Popular + Autocomplete",
+                    "best_for": "Most effective and smart suggestions"
+                },
+                {
+                    "name": "semantic",
+                    "description": "Semantic (Embedding-based) Suggestions",
+                    "best_for": "Smart meaning-based suggestions"
+                },
+                {
+                    "name": "popular",
+                    "description": "Most Popular User Queries",
+                    "best_for": "Discovering common user searches"
+                },
+                {
+                    "name": "autocomplete",
+                    "description": "Auto-complete from User Queries",
+                    "best_for": "Completing user search queries"
+                },
+                {
+                    "name": "semantic_terms",
+                    "description": "Semantic Terms from Documents",
+                    "best_for": "Finding relevant terms from document content"
+                },
+                {
+                    "name": "hybrid_terms",
+                    "description": "Hybrid Terms: Document Terms + User Queries",
+                    "best_for": "Best of both worlds - document terms and user patterns"
+                }
+            ]
+        }
+
+@app.post("/suggestions/extract-terms")
+async def extract_document_terms(request: Request):
+    """Extract terms from documents"""
+    try:
+        data = await request.json()
+        dataset = data.get("dataset", "argsme")
+        top_k = data.get("top_k", 1000)
+        
+        result = await service_manager.call_service(
+            "query_suggestions", "extract-terms",
+            method="POST",
+            data={"dataset": dataset, "top_k": top_k}
+        )
+        
+        return result
+    except Exception as e:
+        print(f"Error extracting terms: {e}")
+        return {
+            "dataset": data.get("dataset", "argsme"),
+            "terms_count": 0,
+            "terms": [],
+            "status": "error",
+            "error": str(e)
+        }
+
+@app.post("/suggestions/build-embeddings")
+async def build_term_embeddings(request: Request):
+    """Build embedding vectors for terms"""
+    try:
+        data = await request.json()
+        dataset = data.get("dataset", "argsme")
+        top_k = data.get("top_k", 1000)
+        
+        result = await service_manager.call_service(
+            "query_suggestions", "build-term-embeddings",
+            method="POST",
+            data={"dataset": dataset, "top_k": top_k}
+        )
+        
+        return result
+    except Exception as e:
+        print(f"Error building embeddings: {e}")
+        return {
+            "dataset": data.get("dataset", "argsme"),
+            "status": "error",
+            "error": str(e)
+        }
 
 @app.post("/suggestions")
 async def post_smart_suggestions(request: Request):

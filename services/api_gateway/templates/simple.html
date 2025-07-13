@@ -163,6 +163,21 @@
             margin-left: 10px;
         }
 
+        .result-preview {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 3px solid #3498db;
+        }
+
+        .result-preview p {
+            margin: 0;
+            color: #495057;
+            line-height: 1.4;
+            font-size: 13px;
+        }
+
         .result-id {
             color: #7f8c8d;
             font-size: 12px;
@@ -322,8 +337,17 @@
                     <div class="result-item">
                         <div class="result-title">
                             <span class="result-score">{{ "%.3f"|format(result.score) }}</span>
-                            المستند #{{ loop.index }}
+                            {% if result.get('title') %}
+                                {{ result.get('title') }}
+                            {% else %}
+                                المستند #{{ loop.index }}
+                            {% endif %}
                         </div>
+                        {% if result.get('preview_text') %}
+                        <div class="result-preview">
+                            <p>{{ result.get('preview_text') }}</p>
+                        </div>
+                        {% endif %}
                         <div class="result-id">
                             ID: {{ result.doc_id }}
                         </div>

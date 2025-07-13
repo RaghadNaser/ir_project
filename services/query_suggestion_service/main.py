@@ -14,7 +14,7 @@ Provides intelligent query suggestions using multiple methods:
 
 import os
 import sqlite3
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Tuple
@@ -34,9 +34,15 @@ import pickle
 import threading
 from sentence_transformers import SentenceTransformer
 import faiss
+import logging
+# from rapidfuzz import process as rapidfuzz_process, fuzz as rapidfuzz_fuzz
 
 nltk.download('wordnet', quiet=True)
 nltk.download('punkt', quiet=True)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Smart Query Suggestion Service")
 
@@ -363,27 +369,27 @@ class SmartQuerySuggestionService:
                     }
                 })
         # 2. Fuzzy matching إذا لم يوجد اقتراح كافٍ
-        if len(autocomplete_suggestions) < top_k:
-            fuzzy_matches = rapidfuzz_process.extract(
-                query,
-                titles,
-                scorer=rapidfuzz_fuzz.QRatio,
-                limit=top_k*2
-            )
-            for match_title, score, idx in fuzzy_matches:
-                if score >= 70 and all(s['query'] != match_title for s in autocomplete_suggestions):
-                    if not self.is_valid_suggestion(match_title):
-                        continue
-                    autocomplete_suggestions.append({
-                        'query': match_title,
-                        'score': score/100.0,
-                        'type': 'fuzzy_autocomplete',
-                        'metadata': {
-                            'id': queries[idx]['id'],
-                            'match_type': 'fuzzy',
-                            'similarity': score/100.0
-                        }
-                    })
+        # if len(autocomplete_suggestions) < top_k:
+        #     fuzzy_matches = rapidfuzz_process.extract(
+        #         query,
+        #         titles,
+        #         scorer=rapidfuzz_fuzz.QRatio,
+        #         limit=top_k*2
+        #     )
+        #     for match_title, score, idx in fuzzy_matches:
+        #         if score >= 70 and all(s['query'] != match_title for s in autocomplete_suggestions):
+        #             if not self.is_valid_suggestion(match_title):
+        #                 continue
+        #             autocomplete_suggestions.append({
+        #                 'query': match_title,
+        #                 'score': score/100.0,
+        #                 'type': 'fuzzy_autocomplete',
+        #                 'metadata': {
+        #                     'id': queries[idx]['id'],
+        #                     'match_type': 'fuzzy',
+        #                     'similarity': score/100.0
+        #                 }
+        #             })
         # ترتيب النتائج
         autocomplete_suggestions.sort(key=lambda x: x['score'], reverse=True)
         return autocomplete_suggestions[:top_k]
@@ -634,10 +640,297 @@ class SmartQuerySuggestionService:
                     results.append(s)
         return results[:top_k]
 
+    def extract_terms_from_documents(self, dataset: str, top_k_terms: int = 1000) -> List[Dict]:
+        """Extract important terms from documents in the database"""
+        try:
+            # Connect to database
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            
+            # Check if database file exists
+            if not os.path.exists(DB_PATH):
+                logger.error(f"Database file not found: {DB_PATH}")
+                return []
+            
+            # Check available tables
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+            table_names = [table[0] for table in tables]
+            logger.info(f"Available tables: {table_names}")
+            
+            # Extract texts from database
+            if dataset == "argsme":
+                if "argsme_raw" not in table_names:
+                    logger.error("argsme_raw table not found")
+                    return []
+                    
+                sql = """
+                SELECT doc_id, conclusion, premises_texts, source_title, topic
+                FROM argsme_raw 
+                LIMIT 1000
+                """
+            else:  # wikir
+                if "wikir_docs" not in table_names:
+                    logger.error("wikir_docs table not found")
+                    return []
+                    
+                sql = """
+                SELECT doc_id, text
+                FROM wikir_docs
+                LIMIT 1000
+                """
+            
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            logger.info(f"Retrieved {len(rows)} documents from {dataset}")
+            
+            if not rows:
+                logger.warning(f"No documents found in {dataset}")
+                return []
+            
+            # Collect texts
+            documents = []
+            for row in rows:
+                if dataset == "argsme":
+                    # Combine conclusion and premises_texts
+                    content_parts = []
+                    if row[1]:  # conclusion
+                        content_parts.append(str(row[1]))
+                    if row[2]:  # premises_texts
+                        content_parts.append(str(row[2]))
+                    if row[3]:  # source_title
+                        content_parts.append(str(row[3]))
+                    
+                    full_content = " ".join(content_parts)
+                    if len(full_content.strip()) > 10:  # Only add if content is meaningful
+                        documents.append({
+                            'doc_id': str(row[0]),
+                            'content': full_content,
+                            'topic': str(row[4]) if row[4] else "Unknown"
+                        })
+                else:
+                    content = str(row[1])
+                    if len(content.strip()) > 10:  # Only add if content is meaningful
+                        documents.append({
+                            'doc_id': str(row[0]),
+                            'content': content,
+                            'topic': "WIKIR Document"
+                        })
+            
+            logger.info(f"Processed {len(documents)} documents with meaningful content")
+            
+            if not documents:
+                logger.warning("No documents with meaningful content found")
+                return []
+            
+            # Extract keywords using TF-IDF
+            texts = [doc['content'] for doc in documents]
+            
+            # Clean texts
+            cleaned_texts = []
+            for text in texts:
+                # Simple cleaning
+                text = re.sub(r'[^\w\s]', ' ', text.lower())
+                text = re.sub(r'\s+', ' ', text).strip()
+                if len(text) > 20:  # Increased minimum length
+                    cleaned_texts.append(text)
+            
+            logger.info(f"Cleaned {len(cleaned_texts)} texts")
+            
+            if not cleaned_texts:
+                logger.warning("No cleaned texts available")
+                return []
+            
+            # Use TF-IDF to extract keywords
+            vectorizer = TfidfVectorizer(
+                max_features=min(top_k_terms, 500),  # Limit for testing
+                stop_words='english',
+                ngram_range=(1, 2),  # Single and double words only
+                min_df=1,  # Must appear in at least 1 document
+                max_df=0.9  # Must not appear in more than 90% of documents
+            )
+            
+            tfidf_matrix = vectorizer.fit_transform(cleaned_texts)
+            feature_names = vectorizer.get_feature_names_out()
+            
+            logger.info(f"Extracted {len(feature_names)} features")
+            
+            # Calculate average TF-IDF for each term
+            term_scores = {}
+            for i, term in enumerate(feature_names):
+                # Calculate average TF-IDF across all documents
+                avg_score = tfidf_matrix[:, i].mean()
+                if avg_score > 0.001:  # Lower threshold
+                    term_scores[term] = avg_score
+            
+            logger.info(f"Found {len(term_scores)} terms with scores > 0.001")
+            
+            # Sort terms by importance
+            sorted_terms = sorted(term_scores.items(), key=lambda x: x[1], reverse=True)
+            
+            # Convert to list of dictionaries
+            extracted_terms = []
+            for term, score in sorted_terms[:top_k_terms]:
+                extracted_terms.append({
+                    'term': term,
+                    'score': float(score),
+                    'type': 'extracted_from_documents',
+                    'dataset': dataset,
+                    'frequency': int(score * 1000)  # Frequency estimate
+                })
+            
+            logger.info(f"Returning {len(extracted_terms)} terms")
+            return extracted_terms
+            
+        except Exception as e:
+            logger.error(f"Error extracting terms from documents: {str(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return []
+        finally:
+            if 'conn' in locals():
+                conn.close()
+
+    def build_term_embeddings(self, dataset: str, terms: List[Dict]) -> Dict:
+        """Build embedding vectors for extracted terms"""
+        if not terms or not self.embedding_model:
+            return {}
+        
+        try:
+            # Extract texts only
+            term_texts = [term['term'] for term in terms]
+            
+            # Convert to embeddings
+            embeddings = self.embedding_model.encode(
+                term_texts, 
+                show_progress_bar=False, 
+                convert_to_numpy=True
+            )
+            
+            # Create FAISS index for fast search
+            dim = embeddings.shape[1]
+            index = faiss.IndexFlatIP(dim)
+            
+            # Normalize embeddings
+            faiss.normalize_L2(embeddings)
+            index.add(embeddings)
+            
+            # Save data
+            term_embeddings_data = {
+                'terms': terms,
+                'embeddings': embeddings,
+                'index': index,
+                'term_to_idx': {term['term']: i for i, term in enumerate(terms)}
+            }
+            
+            # Save in cache
+            if not hasattr(self, 'term_embeddings_cache'):
+                self.term_embeddings_cache = {}
+            
+            self.term_embeddings_cache[dataset] = term_embeddings_data
+            
+            return term_embeddings_data
+            
+        except Exception as e:
+            logger.error(f"Error building term embeddings: {str(e)}")
+            return {}
+
+    def get_semantic_term_suggestions(self, query: str, dataset: str, top_k: int = 10, threshold: float = 0.3) -> List[Dict]:
+        """Get semantic suggestions from terms extracted from documents"""
+        
+        # Check if term embeddings exist
+        if not hasattr(self, 'term_embeddings_cache') or dataset not in self.term_embeddings_cache:
+            # Extract terms and build embeddings if not available
+            terms = self.extract_terms_from_documents(dataset)
+            if not terms:
+                return []
+            
+            term_data = self.build_term_embeddings(dataset, terms)
+            if not term_data:
+                return []
+        
+        term_data = self.term_embeddings_cache[dataset]
+        
+        try:
+            # Convert query to embedding
+            query_embedding = self.embedding_model.encode([query], show_progress_bar=False, convert_to_numpy=True)
+            faiss.normalize_L2(query_embedding)
+            
+            # Search in FAISS index
+            D, I = term_data['index'].search(query_embedding, top_k * 2)  # Double for filtering
+            
+            suggestions = []
+            for rank, (idx, score) in enumerate(zip(I[0], D[0])):
+                if idx < 0 or score < threshold:
+                    continue
+                
+                term_info = term_data['terms'][idx]
+                suggestions.append({
+                    'query': term_info['term'],
+                    'score': float(score),
+                    'type': 'semantic_term',
+                    'metadata': {
+                        'source': 'document_extraction',
+                        'dataset': dataset,
+                        'term_score': term_info['score'],
+                        'frequency': term_info['frequency'],
+                        'semantic_similarity': float(score)
+                    }
+                })
+                
+                if len(suggestions) >= top_k:
+                    break
+            
+            return suggestions
+            
+        except Exception as e:
+            logger.error(f"Error getting semantic term suggestions: {str(e)}")
+            return []
+
+    def get_hybrid_term_suggestions(self, query: str, dataset: str, top_k: int = 10) -> List[Dict]:
+        """Combine semantic term suggestions with user suggestions"""
+        
+        # 1. Term suggestions from documents (60%)
+        semantic_terms = self.get_semantic_term_suggestions(query, dataset, int(top_k * 0.6))
+        
+        # 2. Previous user suggestions (40%)
+        user_suggestions = self.get_semantic_suggestions(query, dataset, int(top_k * 0.4))
+        
+        # Merge results
+        all_suggestions = []
+        seen_queries = set()
+        
+        # Add term suggestions first
+        for suggestion in semantic_terms:
+            if suggestion['query'] not in seen_queries:
+                seen_queries.add(suggestion['query'])
+                all_suggestions.append(suggestion)
+        
+        # Add user suggestions
+        for suggestion in user_suggestions:
+            if suggestion['query'] not in seen_queries:
+                seen_queries.add(suggestion['query'])
+                all_suggestions.append(suggestion)
+        
+        # Sort by score
+        all_suggestions.sort(key=lambda x: x['score'], reverse=True)
+        return all_suggestions[:top_k]
 
 
 # Create service instance
 suggestion_service = SmartQuerySuggestionService()
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize service on startup"""
+    logger.info("Starting Query Suggestion Service...")
+    logger.info("Service initialized successfully")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    logger.info("Shutting down Query Suggestion Service...")
+    # Cleanup any resources if needed
 
 @app.get("/health")
 def health_check():
@@ -673,6 +966,10 @@ def suggest(req: SuggestionRequest):
         suggestions = suggestion_service.get_correction_suggestions(req.query, req.dataset, req.top_k)
     elif req.method == "category":
         suggestions = suggestion_service.get_category_suggestions(req.query, req.dataset, req.top_k)
+    elif req.method == "semantic_terms":
+        suggestions = suggestion_service.get_semantic_term_suggestions(req.query, req.dataset, req.top_k)
+    elif req.method == "hybrid_terms":
+        suggestions = suggestion_service.get_hybrid_term_suggestions(req.query, req.dataset, req.top_k)
     
     # Remove metadata if not requested
     if not req.include_metadata:
@@ -711,10 +1008,111 @@ def get_available_methods():
                 "name": "autocomplete",
                 "description": "Auto-complete from User Queries",
                 "best_for": "Completing user search queries"
+            },
+            {
+                "name": "semantic_terms",
+                "description": "Semantic Terms from Documents",
+                "best_for": "Finding relevant terms from document content"
+            },
+            {
+                "name": "hybrid_terms",
+                "description": "Hybrid Terms: Document Terms + User Queries",
+                "best_for": "Best of both worlds - document terms and user patterns"
             }
         ]
     }
 
+@app.post("/extract-terms")
+async def extract_terms(request: Request):
+    """Extract terms from documents"""
+    try:
+        data = await request.json()
+        dataset = data.get("dataset", "argsme")
+        top_k = data.get("top_k", 1000)
+        
+        logger.info(f"Extracting terms for dataset: {dataset}, top_k: {top_k}")
+        terms = suggestion_service.extract_terms_from_documents(dataset, top_k)
+        logger.info(f"Successfully extracted {len(terms)} terms")
+        return {
+            "dataset": dataset,
+            "terms_count": len(terms),
+            "terms": terms[:100],  # Return first 100 terms only for display
+            "status": "success"
+        }
+    except Exception as e:
+        logger.error(f"Error in extract_terms endpoint: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return {
+            "dataset": data.get("dataset", "argsme") if 'data' in locals() else "unknown",
+            "terms_count": 0,
+            "terms": [],
+            "status": "error",
+            "error": str(e)
+        }
+
+@app.post("/build-term-embeddings")
+async def build_term_embeddings(request: Request):
+    """Build embedding vectors for terms"""
+    try:
+        data = await request.json()
+        dataset = data.get("dataset", "argsme")
+        top_k = data.get("top_k", 1000)
+        
+        # Extract terms first
+        terms = suggestion_service.extract_terms_from_documents(dataset, top_k)
+        if not terms:
+            return {
+                "dataset": dataset,
+                "status": "error",
+                "error": "No terms extracted"
+            }
+        
+        # Build embeddings
+        term_data = suggestion_service.build_term_embeddings(dataset, terms)
+        if not term_data:
+            return {
+                "dataset": dataset,
+                "status": "error",
+                "error": "Failed to build embeddings"
+            }
+        
+        return {
+            "dataset": dataset,
+            "terms_count": len(terms),
+            "embeddings_shape": term_data['embeddings'].shape,
+            "status": "success",
+            "message": f"Built embeddings for {len(terms)} terms"
+        }
+    except Exception as e:
+        return {
+            "dataset": data.get("dataset", "argsme") if 'data' in locals() else "unknown",
+            "status": "error",
+            "error": str(e)
+        }
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8010) 
+    import signal
+    import sys
+    
+    def signal_handler(sig, frame):
+        print("\nShutting down gracefully...")
+        sys.exit(0)
+    
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    try:
+        uvicorn.run(
+            app, 
+            host="0.0.0.0", 
+            port=8010,
+            log_level="info",
+            access_log=True
+        )
+    except KeyboardInterrupt:
+        print("\nShutting down gracefully...")
+    except Exception as e:
+        logger.error(f"Server error: {e}")
+        sys.exit(1) 

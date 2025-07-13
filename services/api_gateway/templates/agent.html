@@ -502,6 +502,148 @@
             color: #bdc3c7;
         }
         
+        .dataset-selection {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+            border-left: 4px solid #17a2b8;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dataset-header {
+            font-weight: 600;
+            color: #17a2b8;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .dataset-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .dataset-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .dataset-desc {
+            font-size: 11px;
+            font-weight: 400;
+            opacity: 0.9;
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        .argsme-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .argsme-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(40, 167, 69, 0.3);
+        }
+        
+        .wikir-btn {
+            background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+            color: white;
+        }
+        
+        .wikir-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
+        }
+        
+        .dark-mode .dataset-selection {
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+        }
+        
+        .dark-mode .dataset-header {
+            color: #17a2b8;
+        }
+        
+        .clarification-suggestions {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 193, 7, 0.2);
+        }
+        
+        .clarification-header {
+            font-weight: 600;
+            color: #ffc107;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .clarification-header i {
+            margin-right: 8px;
+        }
+        
+        .clarification-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .clarification-btn {
+            background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(255, 193, 7, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 140px;
+            justify-content: center;
+        }
+        
+        .clarification-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        }
+        
+        .clarification-btn i {
+            font-size: 10px;
+        }
+        
+        .dark-mode .clarification-suggestions {
+            background: rgba(255, 193, 7, 0.15);
+            border-color: rgba(255, 193, 7, 0.3);
+        }
+        
+        .dark-mode .clarification-header {
+            color: #ffc107;
+        }
+        
+        .dark-mode .clarification-btn {
+            background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+            color: white;
+        }
+        
         .document-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
@@ -856,20 +998,45 @@
         // Initialize session
         async function initializeSession() {
             try {
-                const response = await fetch('/agent/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message: 'Initialize session',
-                        dataset: 'argsme'
-                    })
-                });
-                
-                const data = await response.json();
-                sessionId = data.session_id;
+                // Just initialize session without sending a message
+                sessionId = 'session_' + Date.now();
                 console.log('Session initialized:', sessionId);
+                
+                // Mark as initialized to prevent duplicate dataset buttons
+                window.isInitialized = true;
+                
+                // Show welcome message directly
+                const welcomeMessage = {
+                    response: "مرحباً! لمساعدتك بشكل أفضل، أي مجموعة بيانات تفضل أن أبحث فيها؟\n\n• ARGSME: مناقشات وحجج حول مواضيع مختلفة\n• WIKIR: مقالات من ويكيبيديا",
+                    documents: [],
+                    confidence: 0.9,
+                    language: 'ar',
+                    search_method: 'hybrid',
+                    dataset_suggestion: true
+                };
+                
+                addAgentMessage(welcomeMessage);
+                
+                // Add dataset selection buttons
+                const datasetDiv = document.createElement('div');
+                datasetDiv.className = 'dataset-selection';
+                datasetDiv.innerHTML = `
+                    <div class="dataset-header">
+                        <i class="fas fa-database"></i> اختر مجموعة البيانات
+                    </div>
+                    <div class="dataset-buttons">
+                        <button class="dataset-btn argsme-btn" onclick="selectDataset('argsme')">
+                            <i class="fas fa-comments"></i> ARGSME
+                            <div class="dataset-desc">مناقشات وحجج حول مواضيع مختلفة</div>
+                        </button>
+                        <button class="dataset-btn wikir-btn" onclick="selectDataset('wikir')">
+                            <i class="fas fa-book"></i> WIKIR
+                            <div class="dataset-desc">مقالات من ويكيبيديا</div>
+                        </button>
+                    </div>
+                `;
+                document.getElementById('chatMessages').appendChild(datasetDiv);
+                
             } catch (error) {
                 console.error('Failed to initialize session:', error);
             }
@@ -882,9 +1049,57 @@
             
             if (!message) return;
             
+            // Check if dataset is selected
+            if (!window.selectedDataset) {
+                // If no dataset selected, show error message
+                const errorMessage = {
+                    response: "يرجى اختيار مجموعة البيانات أولاً قبل إرسال سؤالك.",
+                    documents: [],
+                    confidence: 0.5,
+                    language: 'ar',
+                    search_method: 'hybrid',
+                    dataset_suggestion: true
+                };
+                
+                addMessage(message, 'user');
+                addAgentMessage(errorMessage);
+                
+                // Add dataset selection buttons again
+                const datasetDiv = document.createElement('div');
+                datasetDiv.className = 'dataset-selection';
+                datasetDiv.innerHTML = `
+                    <div class="dataset-header">
+                        <i class="fas fa-database"></i> اختر مجموعة البيانات
+                    </div>
+                    <div class="dataset-buttons">
+                        <button class="dataset-btn argsme-btn" onclick="selectDataset('argsme')">
+                            <i class="fas fa-comments"></i> ARGSME
+                            <div class="dataset-desc">مناقشات وحجج حول مواضيع مختلفة</div>
+                        </button>
+                        <button class="dataset-btn wikir-btn" onclick="selectDataset('wikir')">
+                            <i class="fas fa-book"></i> WIKIR
+                            <div class="dataset-desc">مقالات من ويكيبيديا</div>
+                        </button>
+                    </div>
+                `;
+                document.getElementById('chatMessages').appendChild(datasetDiv);
+                
+                // Mark as not initialized to allow dataset buttons in future
+                window.isInitialized = false;
+                return;
+            }
+            
+            // Use selected dataset
+            const dataset = window.selectedDataset;
+            
+            // Send message to agent
+            await sendMessageToAgent(message, dataset);
+        }
+
+        // Send message to agent with dataset
+        async function sendMessageToAgent(message, dataset) {
             // Add user message to chat
             addMessage(message, 'user');
-            messageInput.value = '';
             
             // Show typing indicator
             showTypingIndicator();
@@ -898,7 +1113,7 @@
                     body: JSON.stringify({
                         message: message,
                         session_id: sessionId,
-                        dataset: 'argsme',
+                        dataset: dataset,
                         user_id: 'user_' + Date.now(),
                         language: currentLanguage,
                         search_method: currentSearchMethod,
@@ -1114,6 +1329,72 @@
                 chatMessages.appendChild(suggestionsDiv);
             }
             
+            // Add dataset selection buttons if suggested (but not in initialization)
+            if (data.dataset_suggestion && !window.isInitialized) {
+                const datasetDiv = document.createElement('div');
+                datasetDiv.className = 'dataset-selection';
+                datasetDiv.innerHTML = `
+                    <div class="dataset-header">
+                        <i class="fas fa-database"></i> اختر مجموعة البيانات
+                    </div>
+                    <div class="dataset-buttons">
+                        <button class="dataset-btn argsme-btn" onclick="selectDataset('argsme')">
+                            <i class="fas fa-comments"></i> ARGSME
+                            <div class="dataset-desc">مناقشات وحجج حول مواضيع مختلفة</div>
+                        </button>
+                        <button class="dataset-btn wikir-btn" onclick="selectDataset('wikir')">
+                            <i class="fas fa-book"></i> WIKIR
+                            <div class="dataset-desc">مقالات من ويكيبيديا</div>
+                        </button>
+                    </div>
+                `;
+                chatMessages.appendChild(datasetDiv);
+            }
+            
+            // Add clarification suggestions if response contains clarification request
+            if (data.response && (data.response.includes('هل يمكنك توضيح') || data.response.includes('سؤالك مثير للاهتمام'))) {
+                const clarificationDiv = document.createElement('div');
+                clarificationDiv.className = 'clarification-suggestions';
+                clarificationDiv.innerHTML = `
+                    <div class="clarification-header">
+                        <i class="fas fa-lightbulb"></i> اقتراحات للتوضيح
+                    </div>
+                    <div class="clarification-buttons">
+                        <button class="clarification-btn" onclick="sendClarification('أريد معلومات أكثر تفصيلاً')">
+                            <i class="fas fa-search-plus"></i> معلومات أكثر تفصيلاً
+                        </button>
+                        <button class="clarification-btn" onclick="sendClarification('أريد أمثلة عملية')">
+                            <i class="fas fa-list"></i> أمثلة عملية
+                        </button>
+                        <button class="clarification-btn" onclick="sendClarification('أريد آراء مختلفة')">
+                            <i class="fas fa-comments"></i> آراء مختلفة
+                        </button>
+                        <button class="clarification-btn" onclick="sendClarification('أريد معلومات حديثة')">
+                            <i class="fas fa-clock"></i> معلومات حديثة
+                        </button>
+                        <button class="clarification-btn" onclick="sendClarification('أريد معلومات للمبتدئين')">
+                            <i class="fas fa-graduation-cap"></i> معلومات للمبتدئين
+                        </button>
+                        <button class="clarification-btn" onclick="sendClarification('أريد معلومات متقدمة')">
+                            <i class="fas fa-rocket"></i> معلومات متقدمة
+                        </button>
+                        <button class="clarification-btn" onclick="sendClarification('أريد معلومات تاريخية')">
+                            <i class="fas fa-history"></i> معلومات تاريخية
+                        </button>
+                        <button class="clarification-btn" onclick="sendClarification('أريد معلومات علمية')">
+                            <i class="fas fa-flask"></i> معلومات علمية
+                        </button>
+                        <button class="clarification-btn" onclick="sendClarification('أريد معلومات عملية')">
+                            <i class="fas fa-tools"></i> معلومات عملية
+                        </button>
+                        <button class="clarification-btn" onclick="sendClarification('أريد معلومات شاملة')">
+                            <i class="fas fa-globe"></i> معلومات شاملة
+                        </button>
+                    </div>
+                `;
+                chatMessages.appendChild(clarificationDiv);
+            }
+            
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
@@ -1181,6 +1462,58 @@
         function sendSuggestion(suggestion) {
             document.getElementById('messageInput').value = suggestion;
             sendMessage();
+        }
+
+        // Select dataset and send message
+        function selectDataset(dataset) {
+            // Store selected dataset
+            window.selectedDataset = dataset;
+            
+            // Clear any existing message
+            document.getElementById('messageInput').value = '';
+            
+            // Show dataset selection in chat
+            addMessage(`تم اختيار: ${dataset.toUpperCase()}`, 'user');
+            
+            // Show confirmation message directly without API call
+            const confirmationMessage = {
+                response: `ممتاز! تم اختيار مجموعة البيانات ${dataset.toUpperCase()}. ما هو سؤالك؟`,
+                documents: [],
+                confidence: 0.8,
+                language: 'ar',
+                search_method: 'hybrid',
+                dataset_suggestion: false
+            };
+            
+            addAgentMessage(confirmationMessage);
+        }
+        
+        // Send clarification request
+        function sendClarification(clarification) {
+            // Add user clarification message
+            addMessage(clarification, 'user');
+            
+            // Send the clarification with current dataset
+            sendMessageToAgent(clarification, window.selectedDataset || 'argsme');
+            
+            // Show typing indicator
+            showTypingIndicator();
+        }
+
+        // Send message with specific dataset
+        function sendMessageWithDataset(dataset) {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                // If no message, just send dataset selection
+                sendMessageToAgent(dataset, dataset);
+            } else {
+                // Send message with dataset
+                sendMessageToAgent(message, dataset);
+            }
+            
+            messageInput.value = '';
         }
 
         // Show typing indicator
