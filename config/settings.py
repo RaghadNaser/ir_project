@@ -1,51 +1,63 @@
-# Application settings and configuration
+# Configuration settings for the IR system
 
-# Dataset configurations
-DATASETS = {
-    "argsme": {
-        "name": "argsme",
-        "display_name": "ARGSME Dataset",
-        "description": "Argument mining dataset"
+# Performance settings
+ENABLE_RESULT_ENHANCEMENT = False  # Set to True to enable full document enhancement (slower)
+ENABLE_TOPIC_DETECTION = False     # Set to True to enable topic detection (slower)
+ENABLE_QUERY_SUGGESTIONS = False   # Set to True to enable query suggestions (slower)
+
+# Database settings
+DB_PATH = "data/ir_database_combined.db"
+
+# Service URLs
+SERVICE_URLS = {
+    "preprocessing": "http://localhost:8002",
+    "tfidf": "http://localhost:8003",
+    "embedding": "http://localhost:8004",
+    "hybrid": "http://localhost:8005",
+    "topic_detection": "http://localhost:8006",
+    "query_suggestions": "http://localhost:8010",
+    "agent": "http://localhost:8011"
+}
+
+# Search service map
+SEARCH_SERVICE_URLS = {
+    "tfidf": "http://localhost:8003/search",
+    "embedding": "http://localhost:8004/search",
+    "hybrid": "http://localhost:8005/search"
+}
+
+# Dataset list
+DATASETS = ["argsme", "wikir"]
+
+# Representations
+REPRESENTATIONS = [
+    ("tfidf", "TF-IDF"),
+    ("embedding", "Embedding"),
+    ("hybrid", "Hybrid (Enhanced)")
+]
+
+# Hybrid search methods
+HYBRID_METHODS = [
+    ("sequential", "Sequential Search"),
+    ("parallel", "Parallel Search"),
+    ("fusion", "Fusion Search")
+]
+
+# Performance modes
+PERFORMANCE_MODES = {
+    "fast": {
+        "description": "Fast mode - basic information only",
+        "features": ["Basic titles", "No database queries", "No topic detection"],
+        "speed": "Very fast"
     },
-    "wikir": {
-        "name": "wikir", 
-        "display_name": "WikiR Dataset",
-        "description": "Wikipedia retrieval dataset"
+    "balanced": {
+        "description": "Balanced mode - moderate features",
+        "features": ["Enhanced titles", "Basic topic detection", "Query suggestions"],
+        "speed": "Moderate"
     },
-    "wikir_en1k_training": {
-        "name": "wikir_en1k_training",
-        "display_name": "WikiR EN1K Training",
-        "description": "WikiR English 1K training dataset"
+    "full": {
+        "description": "Full mode - all features enabled",
+        "features": ["Full document enhancement", "Advanced topic detection", "All suggestions"],
+        "speed": "Slower"
     }
-}
-
-# BERT model configuration
-BERT_CONFIG = {
-    "model_name": "all-MiniLM-L6-v2",
-    "max_length": 512,
-    "batch_size": 32
-}
-
-# TF-IDF configuration
-TFIDF_CONFIG = {
-    "max_features": 10000,
-    "ngram_range": (1, 2),
-    "min_df": 2,
-    "max_df": 0.95
-}
-
-# Hybrid search configuration
-HYBRID_CONFIG = {
-    "default_tfidf_weight": 0.4,
-    "default_embedding_weight": 0.6,
-    "default_fusion_candidates_k": 1000,
-    "default_first_stage_k": 2000
-}
-
-# API configuration
-API_CONFIG = {
-    "host": "0.0.0.0",
-    "port": 8000,
-    "debug": False,
-    "reload": True
 } 

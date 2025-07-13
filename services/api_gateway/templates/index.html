@@ -1109,8 +1109,11 @@
             <p>Search through datasets using advanced methods</p>
             <div class="header-actions">
                 <a href="/agent" class="agent-link">🤖 Intelligent Agent</a>
-    </div>
             </div>
+            <div style="margin-top: 10px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 14px;">
+                ⚡ <strong>Fast Mode Enabled</strong> - For better performance, showing basic document information
+            </div>
+        </div>
 
         <!-- Search Form -->
         <div class="search-panel">
@@ -1241,6 +1244,22 @@
                 <div class="optional-services">
                     <h3>📡 Optional Services</h3>
                     <div class="service-options">
+                        <div class="service-option">
+                            <label>
+                                <input type="checkbox" name="enable_fast_mode" id="enable_fast_mode" checked>
+                                ⚡ Fast Mode (Recommended)
+                            </label>
+                            <div class="service-config active">
+                                <div class="config-row">
+                                    <label>Speed:</label>
+                                    <span style="color: #27ae60; font-weight: bold;">Fast</span>
+                                </div>
+                                <div class="config-row">
+                                    <label>Features:</label>
+                                    <span style="color: #7f8c8d;">Basic titles, no database queries</span>
+                                </div>
+                            </div>
+                        </div>
                         <!-- Topic Detection -->
                         <div class="service-option">
                             <label>
@@ -1347,6 +1366,9 @@
                     <div class="results-stats">
                         {% if results %}
                             Found {{ results|length }} results for "{{ query }}"
+                            {% if not topics and not suggestions %}
+                            <br><small style="color: #27ae60;">🚀 Fast mode enabled - showing basic document information</small>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -1550,6 +1572,28 @@
             
             // Load query suggestions if available
             loadQuerySuggestions();
+        });
+
+        // Fast mode toggle
+        function toggleFastMode() {
+            const fastModeCheckbox = document.getElementById('enable_fast_mode');
+            const topicDetectionCheckbox = document.getElementById('enable_topic_detection');
+            const querySuggestionCheckbox = document.getElementById('enable_query_suggestion');
+            
+            if (fastModeCheckbox.checked) {
+                // Fast mode enabled - disable heavy services
+                if (topicDetectionCheckbox) topicDetectionCheckbox.checked = false;
+                if (querySuggestionCheckbox) querySuggestionCheckbox.checked = false;
+                console.log("⚡ Fast mode enabled - heavy services disabled");
+            }
+        }
+        
+        // Add event listener for fast mode
+        document.addEventListener('DOMContentLoaded', function() {
+            const fastModeCheckbox = document.getElementById('enable_fast_mode');
+            if (fastModeCheckbox) {
+                fastModeCheckbox.addEventListener('change', toggleFastMode);
+            }
         });
 
         function updateWeights(changedSlider) {

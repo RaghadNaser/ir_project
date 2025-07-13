@@ -14,6 +14,11 @@ import asyncio
 import httpx
 from typing import Optional, Dict, Any
 
+# Import settings
+import sys
+sys.path.append('..')
+from config.settings import *
+
 app = FastAPI(
     title="API Gateway with Web UI",
     description="Main API Gateway for Information Retrieval System",
@@ -33,38 +38,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="services/api_gateway/static"), name="static")
 templates = Jinja2Templates(directory="services/api_gateway/templates")
 
-# Service URLs
-SERVICE_URLS = {
-    "preprocessing": "http://localhost:8002",
-    "tfidf": "http://localhost:8003",
-    "embedding": "http://localhost:8004",
-    "hybrid": "http://localhost:8005",
-    "topic_detection": "http://localhost:8006",
-    "query_suggestions": "http://localhost:8010",
-    "agent": "http://localhost:8011"
-}
-
-# Search service map
-SEARCH_SERVICE_URLS = {
-    "tfidf": "http://localhost:8003/search",
-    "embedding": "http://localhost:8004/search",
-    "hybrid": "http://localhost:8005/search"
-}
-
-# Dataset list
-DATASETS = ["argsme", "wikir"]
-REPRESENTATIONS = [
-    ("tfidf", "TF-IDF"),
-    ("embedding", "Embedding"),
-    ("hybrid", "Hybrid (Enhanced)")
-]
-
-# Hybrid search methods
-HYBRID_METHODS = [
-    ("sequential", "Sequential Search"),
-    ("parallel", "Parallel Search"),
-    ("fusion", "Fusion Search")
-]
+# Configuration loaded from config/settings.py
 
 USER_QUERIES_FILE = "data/vectors/user_queries.tsv"
 
@@ -297,8 +271,8 @@ async def enhance_search_results(results: Dict, query: str, dataset: str) -> lis
                     if row:
                         conclusion = row[0] if row[0] else ""
                         premises = row[1] if row[1] else ""
-                        source_title = row[3] if row[3] else ""
-                        topic = row[4] if row[4] else ""
+                        source_title = row[2] if row[2] else ""  # Fixed index
+                        topic = row[3] if row[3] else ""         # Fixed index
                         
                         print(f"✅ Found ARGSME document: conclusion={len(conclusion)} chars, premises={len(premises)} chars")
                         
@@ -456,7 +430,7 @@ async def search_form(
     suggestions = None
     vector_results = None
     
-    if enable_topic_detection:
+    if enable_topic_detection and ENABLE_TOPIC_DETECTION:
         try:
             topic_data = {
                 "query": query,
@@ -537,13 +511,38 @@ async def search_form(
 
     # Enhance results with document information (title, preview, etc.)
     if results:
-        try:
-            enhanced_results = await enhance_search_results({"results": results}, query, dataset)
-            results = enhanced_results
-            print(f"Enhanced {len(results)} results with document information")
-        except Exception as e:
-            print(f"Error enhancing results: {e}")
-            # Continue with original results if enhancement fails
+        if ENABLE_RESULT_ENHANCEMENT:
+            try:
+                enhanced_results = await enhance_search_results({"results": results}, query, dataset)
+                results = enhanced_results
+                print(f"Enhanced {len(results)} results with full document information")
+            except Exception as e:
+                print(f"Error enhancing results: {e}")
+                # Fallback to simple titles
+                for result in results:
+                    doc_id = result.get("doc_id", result.get("id", ""))
+                    if doc_id:
+                        result["title"] = f"Document {doc_id}"
+                        result["preview_text"] = f"Document ID: {doc_id}"
+                    else:
+                        result["title"] = "Unknown Document"
+                        result["preview_text"] = "No preview available"
+        else:
+            # Fast mode - just use doc_id as title
+            for result in results:
+                doc_id = result.get("doc_id", result.get("id", ""))
+                if doc_id:
+                    # Create simple title from doc_id
+                    if doc_id.startswith("doc_"):
+                        result["title"] = f"Document {doc_id[4:]}"
+                    else:
+                        result["title"] = f"Document {doc_id}"
+                    result["preview_text"] = f"Document ID: {doc_id}"
+                else:
+                    result["title"] = "Unknown Document"
+                    result["preview_text"] = "No preview available"
+            
+            print(f"Processed {len(results)} results with simple titles (fast mode)")
 
     return templates.TemplateResponse("index.html", {
         "request": request,
